@@ -42,7 +42,8 @@ const registerUserService = async(userData)=>{
            email : userData.email,
            password : userData.password,
            fullName : userData.fullName,
-           contact : userData.contact 
+           contact : userData.contact ,
+           role : userData.isSeller ? "seller" : "buyer"
 
        });
 
@@ -61,6 +62,8 @@ const registerUserService = async(userData)=>{
         
     }
 }
+
+
 
 
 export { 
