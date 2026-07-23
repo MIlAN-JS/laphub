@@ -4,6 +4,7 @@ import config from "../config/config.js"
 import jwt from "jsonwebtoken"
 
 
+
 const generateRefreshToken = (userId)=>{
 
    return  jwt.sign({
@@ -64,8 +65,46 @@ const registerUserService = async(userData)=>{
 }
 
 
+const loginUserService = async({email , password})=>{
+    try {
+
+        const user = await User.findOne({email})
+        console.log(user , "user data is ")
+
+        if(!user){
+            throw new Error("User with this email doesn't exist please try with another email")
+        }
+
+          const isMatch = await user.comparePassword(password);
+
+            if (!isMatch) {
+               throw new Error ("Invalid password")
+            }
+
+
+         const accessToken = generateAccessToken(user._id);
+         const refreshToken = generateRefreshToken(user._id);
+
+    
+        return {
+            user , 
+            accessToken
+        }
+
+
+
+        
+    } catch (error) {
+
+        throw new Error(error.message)
+        
+    }
+}
+
+
 
 
 export { 
-    registerUserService
+    registerUserService , 
+    loginUserService
 }

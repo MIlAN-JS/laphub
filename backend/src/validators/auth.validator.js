@@ -32,11 +32,23 @@ const validateRegisterUser = [
   .withMessage("Contact must be exactly 10 digits")
   .isNumeric()
   .withMessage("Contact must contain only numbers"),
-      
+
+  body("password")
+  .isLength({min : 6})
+  .withMessage("password length is too small "),
 validateResult
     
 ]
 
+
+const validateLoginUser = [
+    body("email")
+    .isEmail()
+    .withMessage("Please Enter valid Email"),
+   validateResult
+]
+
 export {
-    validateRegisterUser
+    validateRegisterUser, 
+    validateLoginUser
 }
