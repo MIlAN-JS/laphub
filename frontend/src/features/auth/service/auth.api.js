@@ -18,7 +18,13 @@ const registerUser = async({fullName , contact , email , password , isSeller})=>
     
 }
 
+const loginUserService = async({email , password})=> {
+    const response = await api.post("/login", {email , password})
+    return response.data
+}
+
 
 export {
-    registerUser
+    registerUser, 
+    loginUserService
 }
