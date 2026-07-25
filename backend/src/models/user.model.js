@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
     email : {
         type: String,
         required: true,
-        unique: true
+        unique: true, 
+        index : true
     }, 
     password : {
         type: String,
@@ -24,11 +25,23 @@ const userSchema = new mongoose.Schema({
     contact : {
         type: String, 
         required : true
+    },
+    avatar : {
+        type : String 
+    } , 
+    refreshToken : {
+        type : String, 
     }
+    // orderHistory : {
+
+    // }, 
+
+   
 
 
 }, {timestamps: true});
 
+userSchema.index({email})
 
 
 userSchema.pre("save", async function () {
