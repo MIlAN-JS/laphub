@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt"
 
 
+
+
 const userSchema = new mongoose.Schema({
     email : {
         type: String,
@@ -16,19 +18,32 @@ const userSchema = new mongoose.Schema({
     role : {
         type: String,
         enum: ["buyer", "seller"],
+        
         default: "buyer"
     }, 
+    isAdmin : {
+        type : Boolean,
+        default : false
+    }, 
+
     username : {
         type: String,
         required: true
     }, 
+
     contact : {
         type: String, 
         required : true
     },
+
     avatar : {
         type : String 
     } , 
+
+    
+    
+    
+
     refreshToken : {
         type : String, 
     }
