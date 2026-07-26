@@ -1,6 +1,7 @@
 import Router from "express";
 import { validateLoginUser, validateRegisterUser } from "../validators/auth.validator.js";
 import { loginUserController, registerUserController } from "../controllers/auth.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const authRouter = Router();
 
@@ -9,7 +10,7 @@ const authRouter = Router();
  * @description new user registration
  * @access public
  */
-authRouter.post("/register", validateRegisterUser ,registerUserController )
+authRouter.post("/register" ,upload.single("avatar") , registerUserController )
 
 
 /**
