@@ -1,7 +1,8 @@
 import Router from "express";
 import { validateLoginUser, validateRegisterUser, validateSellerRegistration } from "../validators/auth.validator.js";
-import { loginUserController, registerUserController } from "../controllers/auth.controller.js";
+import { loginUserController, registerSellerController, registerUserController } from "../controllers/auth.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import verifyUser from "../middlewares/auth.middleware.js";
 
 const authRouter = Router();
 
@@ -28,7 +29,7 @@ authRouter.post("/login",validateLoginUser , loginUserController )
  * @access private
  */
 
-authRouter.post("/register-seller", validateSellerRegistration)
+authRouter.post("/register-seller",verifyUser ,validateSellerRegistration , upload.single("panImage"),registerSellerController )
 
 
 

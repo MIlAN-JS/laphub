@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema({
     role : {
         type: String,
         enum: ["buyer", "seller"],
-        
         default: "buyer"
     }, 
     isAdmin : {
@@ -33,7 +32,7 @@ const userSchema = new mongoose.Schema({
 
     contact : {
         type: String, 
-        required : true
+
     },
 
     avatar : {
@@ -42,17 +41,12 @@ const userSchema = new mongoose.Schema({
    addresses: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Address",
-  }],
-    
-    
-    
+  }],  
 
     refreshToken : {
         type : String, 
     }
-    // orderHistory : {
-
-    // }, 
+   
 
    
 

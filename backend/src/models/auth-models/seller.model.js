@@ -33,7 +33,7 @@ const sellerSchema = new mongoose.Schema(
       required: true,
     },
 
-    panId: {
+    panNumber: {
       type: String,
       required: true,
     },
