@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
-import fs from fs
+import fs from"fs"
 import Cloudinary from '../config/cloudinary.config.js';
+import { loadEnvFile } from 'process';
 
 
 
@@ -26,6 +27,8 @@ const uploadOnCloudinary = async(localFilePath)=>{
 
        console.log(uploadResult , "file is uploaded successfully in cloudinary")
 
+       fs.unlinkSync(localFilePath)
+
        return uploadResult.url
          
         
@@ -42,6 +45,6 @@ const uploadOnCloudinary = async(localFilePath)=>{
 
 
 
-export {uploadOnCloudinary}
+export default uploadOnCloudinary
 
 

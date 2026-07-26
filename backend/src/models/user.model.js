@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true, 
-        index : true
+        
     }, 
     password : {
         type: String,
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
         enum: ["buyer", "seller"],
         default: "buyer"
     }, 
-    fullName : {
+    username : {
         type: String,
         required: true
     }, 
@@ -40,8 +40,6 @@ const userSchema = new mongoose.Schema({
 
 
 }, {timestamps: true});
-
-userSchema.index({email})
 
 
 userSchema.pre("save", async function () {

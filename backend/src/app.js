@@ -1,7 +1,6 @@
 import express from "express";
 import morgan from "morgan"
 import cookieParser from "cookie-parser"
-import authRouter from "./routes/auth.route.js";
 
 
 const app = express();
@@ -19,12 +18,27 @@ app.use(cookieParser());
 
 
 // routes 
+import authRouter from "./routes/auth.route.js";
+import APIError from "./utility/apiError.js";
+import errorHandler from "./middlewares/errHandler.middleware.js";
 
 app.use("/api/v1/auth", authRouter);
 
+    app.get("/api/v1/error" , (req , res ,next)=>{
+        try {
+
+            const error = new APIError(400 , "Checking error", "CHECKING_ERROR")
+           
+            throw error
+            
+        } catch (error) {
+            next(error)
+        }
+    })
 
 
 
 
+app.use(errorHandler)
 
 export default app
