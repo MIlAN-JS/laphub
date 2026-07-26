@@ -39,7 +39,10 @@ const userSchema = new mongoose.Schema({
     avatar : {
         type : String 
     } , 
-
+   addresses: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Address",
+  }],
     
     
     

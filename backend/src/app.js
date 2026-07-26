@@ -1,6 +1,8 @@
 import express from "express";
 import morgan from "morgan"
 import cookieParser from "cookie-parser"
+import APIError from "./utility/apiError.js";
+import errorHandler from "./middlewares/errHandler.middleware.js";
 
 
 const app = express();
@@ -19,8 +21,6 @@ app.use(cookieParser());
 
 // routes 
 import authRouter from "./routes/auth.route.js";
-import APIError from "./utility/apiError.js";
-import errorHandler from "./middlewares/errHandler.middleware.js";
 
 app.use("/api/v1/auth", authRouter);
 
