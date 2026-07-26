@@ -5,22 +5,22 @@ import jwt from "jsonwebtoken";
 import config from "../config/config.js"
 
 
-const verifyUser = asyncHandler(async(req , res ,next)=>{
+  const verifyUser = asyncHandler(async(req , res ,next)=>{
 
-    const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+      const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
 
 
 
-    if(!accessToken){
-      throw new APIError(401, "token required " , "USER_NOT_FOUND")
-    }
+      if(!accessToken){
+        throw new APIError(401, "token required " , "USER_NOT_FOUND")
+      }
 
-    const decoded = jwt.verify(accessToken , config.JWT_ACCESS_SECRET)
+      const decoded = jwt.verify(accessToken , config.JWT_ACCESS_SECRET)
 
-    req.userId = decoded.id
+      req.userId = decoded.id
 
-     next()
+      next()
 
-})
+  })
 
 export default verifyUser

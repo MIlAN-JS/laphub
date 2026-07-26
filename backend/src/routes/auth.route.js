@@ -4,6 +4,7 @@ import { loginUserController, registerSellerController, registerUserController }
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyUser from "../middlewares/auth.middleware.js";
 import { refreshTokenController } from "../controllers/auth.controller.js";
+import User from "../models/auth-models/user.model.js";
 
 const authRouter = Router();
 
@@ -40,6 +41,18 @@ authRouter.post("/refresh-token" , refreshTokenController )
 
 
 
+
+authRouter.get("/hello" , verifyUser,  async(req , res , next)=>{
+    console.log(req.userId)
+    const user = await User.findById(req.userId)
+    console.log(user)
+    res.status(200).json({
+        message : "hello world", 
+        user
+    })
+})
+
+    
 
 
 export default authRouter;
