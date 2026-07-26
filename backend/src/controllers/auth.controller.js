@@ -5,6 +5,9 @@ import uploadOnCloudinary from "../utility/cloudinary.js";
 import User from "../models/auth-models/user.model.js";
 import APIResponse from "../utility/apiResponse.js";
 import Seller from "../models/auth-models/seller.model.js";
+import jwt from "jsonwebtoken"
+import config from "../config/config.js";
+
 
 // const registerUserController = async(req , res , next) => {
 
@@ -223,8 +226,49 @@ const loginUserController = async(req , res , next)=>{
 
 }
 
+const refreshTokenController = asyncHandler(async(req , res , next)=>{
+
+    const refreshToken = req.cookies.refreshToken
+
+    if(!refreshToken){
+        throw new APIError(401 , "token required " , "USER_NOT_FOUND")
+    }
+
+    const decoded = jwt.verify(refreshToken , config.JWT_REFRESH_SECRET)
+
+    const userId = decoded.id
+
+    const user = await User.findById(userId).populate("addresses").select("-password -refreshToken -panImage -panId")
+
+    if(!user){
+        throw new APIError(401 , "user not found " , "USER_NOT_FOUND")
+    }
+
+    const accessToken = generateAccessToken(user._id);
+    const newRefreshToken = generateRefreshToken(user._id);
+
+    user.refreshToken = newRefreshToken
+    await user.save()
+
+
+    res.cookie("refreshToken" , newRefreshToken , {
+        httpOnly : true,
+        secure : false,
+        maxAge : 24 * 60 * 60 * 1000
+    });
+
+
+    res.status(200).json(new APIResponse(200 , {user , accessToken} , "token refreshed successs"))
+
+
+
+
+
+})
+
 export { 
     registerUserController, 
     loginUserController, 
-    registerSellerController
+    registerSellerController, 
+    refreshTokenController
 }
