@@ -1,6 +1,7 @@
   //try catch method
 // const asyncHandler = (fn)=>{
 
+
 //   return async(req , res , next)=>{
 
 
@@ -20,6 +21,7 @@
 //    }
 
 // }
+import APIError from "./apiError.js"
 
 
 

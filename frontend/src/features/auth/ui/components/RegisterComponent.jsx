@@ -1,311 +1,385 @@
-import React, { useState } from "react";
-import {
-  MdEmail,
-  MdLock,
-  MdPerson,
-  MdPhone,
-  MdVisibility,
-  MdVisibilityOff,
-  MdStorefront,
-  MdCheckCircle,
-} from "react-icons/md";
-import { FaLaptop } from "react-icons/fa";
-import useAuth from "../../hook/useAuth.js";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-/**
- * Pinterest-inspired Register Page
- * ---------------------------------
- * Fields: email, password, fullName, contact, isSeller (register as a seller)
- *
- * Usage:
- *   <RegisterPage onRegister={(data) => console.log(data)} />
- */
+import {
+  FiMail,
+  FiLock,
+  FiUser,
+  FiEye,
+  FiEyeOff,
+  FiShoppingBag,
+  FiMonitor,
+  FiShield,
+  FiTag,
+  FiLoader,
+  FiCpu,
+  FiAlertCircle,
+} from "react-icons/fi";
+// Adjust this import path to wherever your custom hook lives
+import useAuth from "../../hook/useAuth";
 
-const PIN_TILES = [
-  { grad: "from-rose-400 to-red-500", h: "h-40", mt: "mt-0" },
-  { grad: "from-amber-300 to-orange-500", h: "h-56", mt: "mt-6" },
-  { grad: "from-teal-400 to-cyan-500", h: "h-32", mt: "mt-0" },
-  { grad: "from-fuchsia-400 to-purple-600", h: "h-48", mt: "mt-4" },
-  { grad: "from-lime-300 to-green-500", h: "h-36", mt: "mt-2" },
-  { grad: "from-sky-400 to-indigo-500", h: "h-52", mt: "mt-0" },
-  { grad: "from-pink-400 to-rose-600", h: "h-28", mt: "mt-8" },
-  { grad: "from-yellow-300 to-amber-500", h: "h-44", mt: "mt-0" },
-  { grad: "from-violet-400 to-indigo-600", h: "h-40", mt: "mt-3" },
-];
+// Keep validation rules in one place so they're easy to tune.
+const USERNAME_REGEX = /^[a-zA-Z0-9_ ]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function PinMasonry() {
-  const columns = [
-    PIN_TILES.slice(0, 3),
-    PIN_TILES.slice(3, 6),
-    PIN_TILES.slice(6, 9),
-  ];
-  return (
-    <div className="grid grid-cols-3 gap-3 w-full max-w-md">
-      {columns.map((col, i) => (
-        <div key={i} className="flex flex-col gap-3">
-          {col.map((tile, j) => (
-            <div
-              key={j}
-              className={`${tile.h} ${tile.mt} rounded-2xl bg-gradient-to-br ${tile.grad} shadow-lg shadow-black/10`}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
+function validateForm({ username, email, password }) {
+  const errors = {};
+
+  if (!username.trim()) {
+    errors.username = "Username is required";
+  } else if (username.trim().length < 3) {
+    errors.username = "Username must be at least 3 characters";
+  }
+
+  if (!email.trim()) {
+    errors.email = "Email is required";
+  } else if (!EMAIL_REGEX.test(email.trim())) {
+    errors.email = "Enter a valid email address";
+  }
+
+  if (!password) {
+    errors.password = "Password is required";
+  } else if (password.length < 8) {
+    errors.password = "Password must be at least 8 characters";
+  } else if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    errors.password = "Include at least one letter and one number";
+  }
+
+  return errors;
 }
 
-function ToggleSwitch({ checked, onChange, label, icon }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className="w-full flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3.5 hover:border-neutral-300 transition-colors"
-    >
-      <span className="flex items-center gap-2.5 text-sm font-semibold text-neutral-800">
-        <span className="text-red-600 text-lg">{icon}</span>
-        {label}
-      </span>
-      <span
-        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${
-          checked ? "bg-red-600" : "bg-neutral-300"
-        }`}
-      >
-        <span
-          className={`inline-block h-[18px] w-[18px] transform rounded-full bg-white shadow transition-transform duration-200 ${
-            checked ? "translate-x-6" : "translate-x-1"
-          }`}
-        />
-      </span>
-    </button>
-  );
-}
+export default function RegisterComponent() {
+  const { handleRegister } = useAuth();
 
-function FieldError({ message }) {
-  if (!message) return null;
-  return <p className="mt-1.5 text-xs font-medium text-red-600">{message}</p>;
-}
-
-export default function RegisterComponent({ onRegister }) {
+  // useAuth takes a plain { username, email, password, isSeller } object,
+  // so the form owns its own local state and hands it off on submit.
   const [formData, setFormData] = useState({
+    username: "",
     email: "",
     password: "",
-    fullName: "",
-    contact: "",
     isSeller: false,
   });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
 
-  // custom register hook 
-  const {handleRegister} = useAuth()
-  const loading = useSelector(state => state.auth.isLoading)
+  // Matches your auth slice's initialState field names.
+  const { isLoading, error } = useSelector((state) => state.auth);
 
-  
- 
-
-  const handleChange = (field) => (e) => {
-    const value = field === "isSeller" ? e : e.target.value;
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+    // Clear that field's error as soon as the user edits it.
+    setFieldErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
   };
 
-  const validate = () => {
-    const next = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const onSubmit = (e) => {
+    e.preventDefault();
 
-    if (!formData.fullName.trim()) next.fullName = "Enter your full name";
-    if (!formData.email.trim()) next.email = "Enter your email";
-    else if (!emailRegex.test(formData.email)) next.email = "Enter a valid email address";
-    if (!formData.password) next.password = "Create a password";
-    else if (formData.password.length < 8)
-      next.password = "Password must be at least 8 characters";
-    if (!formData.contact.trim()) next.contact = "Enter a contact number";
-    else if (!/^[0-9+\-\s()]{7,15}$/.test(formData.contact))
-      next.contact = "Enter a valid contact number";
+    const errors = validateForm(formData);
+    setFieldErrors(errors);
 
-    setErrors(next);
-    return Object.keys(next).length === 0;
+    if (Object.keys(errors).length > 0) return;
+
+    console.log(formData)
+
+    handleRegister(formData);
   };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!validate()) return;
-        setSubmitted(true);
-
-       handleRegister(formData)
-
-
-       
-    };
-
-
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col md:flex-row">
-      {/* Left visual panel — hidden on mobile */}
-      <div className="hidden md:flex md:w-1/2 lg:w-3/5 relative overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-rose-50 items-center justify-center p-10 lg:p-16">
-        <div className="absolute -top-16 -left-16 h-72 w-72 rounded-full bg-red-200/40 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-orange-200/40 blur-3xl" />
+    <div className="min-h-screen w-full flex bg-[#F8FAFC]">
+      {/* Left brand panel — hidden on small screens */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#2563EB] via-[#1D4ED8] to-[#0F172A]">
+        {/* subtle circuit-board pattern */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.07]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern
+              id="circuit"
+              width="60"
+              height="60"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M0 30h20M40 30h20M30 0v20M30 40v20"
+                stroke="white"
+                strokeWidth="1"
+                fill="none"
+              />
+              <circle cx="30" cy="30" r="3" fill="white" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#circuit)" />
+        </svg>
 
-        <div className="relative z-10 flex flex-col items-center gap-8 max-w-lg">
-          <PinMasonry />
-          <div className="text-center">
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 tracking-tight leading-tight ">
-             One place to buy and sell laptops.
-
-            </h2>
-            <p className="mt-3 text-neutral-600 text-base lg:text-lg ">
-              Discover products from real sellers, or list your own and start reaching buyers today.
-            </p>
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-sm">
+              <FiCpu className="w-5 h-5 text-[#06B6D4]" />
+            </div>
+            <span className="text-lg font-semibold tracking-tight">
+              LapHub
+            </span>
           </div>
+
+          <div className="max-w-sm">
+            <FiMonitor className="w-12 h-12 text-[#06B6D4] mb-6" />
+            <h1 className="text-3xl font-bold leading-tight mb-3">
+              Buy, sell and trade laptops &amp; computers — all in one place.
+            </h1>
+            <p className="text-slate-300 text-sm mb-8">
+              Join a marketplace built for people who know their hardware.
+            </p>
+
+            <ul className="space-y-4">
+              <li className="flex items-center gap-3 text-sm text-slate-200">
+                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <FiShield className="w-4 h-4 text-[#06B6D4]" />
+                </span>
+                Verified sellers, every listing checked
+              </li>
+              <li className="flex items-center gap-3 text-sm text-slate-200">
+                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <FiTag className="w-4 h-4 text-[#F97316]" />
+                </span>
+                Real-time price comparisons on every deal
+              </li>
+              <li className="flex items-center gap-3 text-sm text-slate-200">
+                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <FiShoppingBag className="w-4 h-4 text-[#22C55E]" />
+                </span>
+                Sell your own gear in minutes
+              </li>
+            </ul>
+          </div>
+
+          <p className="text-xs text-slate-400">
+            &copy; {new Date().getFullYear()} LapHub. All rights reserved.
+          </p>
         </div>
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-5 py-10 sm:px-8 md:px-10 lg:px-16">
-        <div className="w-full max-w-sm">
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="h-14 w-14 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
-  <FaLaptop className="text-white text-2xl" />
-</div>
-            <h1 className="mt-4 text-2xl font-extrabold text-neutral-900 tracking-tight">
-              Create your account
-            </h1>
-            <p className="mt-1 text-sm text-neutral-500 text-center">
-              Sign up and start buying and selling your laptops today
-            </p>
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          {/* Mobile-only brand mark */}
+          <div className="flex lg:hidden items-center gap-2 mb-8">
+            <div className="w-9 h-9 rounded-lg bg-[#2563EB] flex items-center justify-center">
+              <FiCpu className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-lg font-semibold tracking-tight text-[#0F172A]">
+              CoreTrade
+            </span>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate className="space-y-4">
-              {/* Full name */}
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-8">
+            <h2 className="text-2xl font-bold text-[#0F172A] mb-1">
+              Create your account
+            </h2>
+            <p className="text-sm text-[#64748B] mb-6">
+              Start buying or listing hardware today.
+            </p>
+
+            {error && (
+              <div className="mb-5 rounded-lg border border-[#F97316]/30 bg-[#F97316]/10 px-4 py-3 text-sm text-[#F97316]">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={onSubmit} className="space-y-5" noValidate>
+              {/* Username */}
               <div>
-                <div
-                  className={`flex items-center gap-3 rounded-2xl border bg-neutral-50 px-4 py-3.5 transition-colors focus-within:border-red-500 focus-within:bg-white ${
-                    errors.fullName ? "border-red-400" : "border-neutral-200"
-                  }`}
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-[#334155] mb-1.5"
                 >
-                  <MdPerson className="text-neutral-400 text-xl shrink-0" />
+                  Username
+                </label>
+                <div className="relative">
+                  <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#64748B]" />
                   <input
+                    id="username"
+                    name="username"
                     type="text"
-                    placeholder="Full name"
-                    value={formData.fullName}
-                    onChange={handleChange("fullName")}
-                    className="w-full bg-transparent outline-none text-sm font-medium text-neutral-900 placeholder:text-neutral-400"
+                    autoComplete="username"
+                    placeholder="e.g. techscout_23"
+                    value={formData.username}
+                    onChange={handleChange}
+                    aria-invalid={!!fieldErrors.username}
+                    aria-describedby={
+                      fieldErrors.username ? "username-error" : undefined
+                    }
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:ring-2 ${
+                      fieldErrors.username
+                        ? "border-[#F97316] focus:border-[#F97316] focus:ring-[#F97316]/20"
+                        : "border-[#E2E8F0] focus:border-[#2563EB] focus:ring-[#2563EB]/20"
+                    }`}
                   />
                 </div>
-                <FieldError message={errors.fullName} />
+                {fieldErrors.username && (
+                  <p
+                    id="username-error"
+                    className="mt-1.5 flex items-center gap-1 text-xs text-[#F97316]"
+                  >
+                    <FiAlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {fieldErrors.username}
+                  </p>
+                )}
               </div>
 
               {/* Email */}
               <div>
-                <div
-                  className={`flex items-center gap-3 rounded-2xl border bg-neutral-50 px-4 py-3.5 transition-colors focus-within:border-red-500 focus-within:bg-white ${
-                    errors.email ? "border-red-400" : "border-neutral-200"
-                  }`}
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-[#334155] mb-1.5"
                 >
-                  <MdEmail className="text-neutral-400 text-xl shrink-0" />
+                  Email address
+                </label>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#64748B]" />
                   <input
+                    id="email"
+                    name="email"
                     type="email"
-                    placeholder="Email address"
+                    autoComplete="email"
+                    placeholder="you@example.com"
                     value={formData.email}
-                    onChange={handleChange("email")}
-                    className="w-full bg-transparent outline-none text-sm font-medium text-neutral-900 placeholder:text-neutral-400"
+                    onChange={handleChange}
+                    aria-invalid={!!fieldErrors.email}
+                    aria-describedby={
+                      fieldErrors.email ? "email-error" : undefined
+                    }
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:ring-2 ${
+                      fieldErrors.email
+                        ? "border-[#F97316] focus:border-[#F97316] focus:ring-[#F97316]/20"
+                        : "border-[#E2E8F0] focus:border-[#2563EB] focus:ring-[#2563EB]/20"
+                    }`}
                   />
                 </div>
-                <FieldError message={errors.email} />
-              </div>
-
-              {/* Contact */}
-              <div>
-                <div
-                  className={`flex items-center gap-3 rounded-2xl border bg-neutral-50 px-4 py-3.5 transition-colors focus-within:border-red-500 focus-within:bg-white ${
-                    errors.contact ? "border-red-400" : "border-neutral-200"
-                  }`}
-                >
-                  <MdPhone className="text-neutral-400 text-xl shrink-0" />
-                  <input
-                    type="tel"
-                    placeholder="Contact number"
-                    value={formData.contact}
-                    onChange={handleChange("contact")}
-                    className="w-full bg-transparent outline-none text-sm font-medium text-neutral-900 placeholder:text-neutral-400"
-                  />
-                </div>
-                <FieldError message={errors.contact} />
+                {fieldErrors.email && (
+                  <p
+                    id="email-error"
+                    className="mt-1.5 flex items-center gap-1 text-xs text-[#F97316]"
+                  >
+                    <FiAlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               {/* Password */}
               <div>
-                <div
-                  className={`flex items-center gap-3 rounded-2xl border bg-neutral-50 px-4 py-3.5 transition-colors focus-within:border-red-500 focus-within:bg-white ${
-                    errors.password ? "border-red-400" : "border-neutral-200"
-                  }`}
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-[#334155] mb-1.5"
                 >
-                  <MdLock className="text-neutral-400 text-xl shrink-0" />
+                  Password
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#64748B]" />
                   <input
+                    id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
+                    autoComplete="new-password"
+                    placeholder="At least 8 characters"
                     value={formData.password}
-                    onChange={handleChange("password")}
-                    className="w-full bg-transparent outline-none text-sm font-medium text-neutral-900 placeholder:text-neutral-400"
+                    onChange={handleChange}
+                    aria-invalid={!!fieldErrors.password}
+                    aria-describedby={
+                      fieldErrors.password ? "password-error" : undefined
+                    }
+                    className={`w-full pl-10 pr-11 py-2.5 rounded-lg border bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:ring-2 ${
+                      fieldErrors.password
+                        ? "border-[#F97316] focus:border-[#F97316] focus:ring-[#F97316]/20"
+                        : "border-[#E2E8F0] focus:border-[#2563EB] focus:ring-[#2563EB]/20"
+                    }`}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((s) => !s)}
-                    className="text-neutral-400 hover:text-neutral-600 shrink-0"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#334155] transition"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
-                      <MdVisibilityOff className="text-xl" />
+                      <FiEyeOff className="w-4.5 h-4.5" />
                     ) : (
-                      <MdVisibility className="text-xl" />
+                      <FiEye className="w-4.5 h-4.5" />
                     )}
                   </button>
                 </div>
-                <FieldError message={errors.password} />
-                <p className="mt-1.5 text-xs text-neutral-400">
-                  Use at least 8 characters.
-                </p>
+                {fieldErrors.password && (
+                  <p
+                    id="password-error"
+                    className="mt-1.5 flex items-center gap-1 text-xs text-[#F97316]"
+                  >
+                    <FiAlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
-              {/* Register as seller toggle */}
-              <ToggleSwitch
-                checked={formData.isSeller}
-                onChange={(val) => handleChange("isSeller")(val)}
-                label="Register as a seller"
-                icon={<MdStorefront />}
-              />
+              {/* Register as seller */}
+              <label
+                htmlFor="isSeller"
+                className="flex items-start gap-3 rounded-lg border border-[#E2E8F0] px-4 py-3 cursor-pointer transition hover:border-[#2563EB]/40 hover:bg-[#2563EB]/[0.03] has-[:checked]:border-[#2563EB] has-[:checked]:bg-[#2563EB]/5"
+              >
+                <input
+                  id="isSeller"
+                  name="isSeller"
+                  type="checkbox"
+                  checked={formData.isSeller}
+                  onChange={handleChange}
+                  className="mt-0.5 w-4 h-4 rounded border-[#E2E8F0] text-[#2563EB] accent-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
+                />
+                <span className="flex-1">
+                  <span className="flex items-center gap-1.5 text-sm font-medium text-[#0F172A]">
+                    <FiShoppingBag className="w-4 h-4 text-[#2563EB]" />
+                    Register as a seller
+                  </span>
+                  <span className="block text-xs text-[#64748B] mt-0.5">
+                    List and sell your own laptops &amp; computers on LapHub
+                  </span>
+                </span>
+              </label>
 
+              {/* Submit */}
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-3.5 transition-colors shadow-md shadow-red-600/20"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-lg transition shadow-sm"
               >
-                Sign up
+                {isLoading ? (
+                  <>
+                    <FiLoader className="w-4 h-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  "Create account"
+                )}
               </button>
-
-              <p className="text-center text-xs text-neutral-500 leading-relaxed pt-1">
-                By continuing, you agree to our Terms of Service and
-                acknowledge our Privacy Policy.
-              </p>
-
-              <p className="text-center text-sm text-neutral-600 pt-2">
-                Already have an account?{" "}
-                <a href="#" className="font-semibold text-red-600 hover:underline">
-                  Log in
-                </a>
-              </p>
             </form>
+
+            <p className="text-center text-sm text-[#64748B] mt-6">
+              Already have an account?{" "}
+              <a
+                href="/login"
+                className="font-medium text-[#06B6D4] hover:text-[#2563EB] transition"
+              >
+                Sign in
+              </a>
+            </p>
+          </div>
         </div>
       </div>
-
     </div>
   );
 }
-
-
-

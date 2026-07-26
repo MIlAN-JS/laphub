@@ -48,7 +48,48 @@ const validateLoginUser = [
    validateResult
 ]
 
+
+const validateSellerRegistration = [
+    body("storeName")
+    .trim()
+    .notEmpty()
+    .withMessage("Store name is required")
+    .isLength({ min: 3, max: 50 })
+    .withMessage("Store name must be between 3 and 50 characters"),
+
+  body("phoneNumber")
+    .trim()
+    .notEmpty()
+    .withMessage("Phone number is required")
+    .isMobilePhone("any")
+    .withMessage("Invalid phone number"),
+
+  body("businessType")
+    .notEmpty()
+    .withMessage("Business type is required")
+    .isIn(["individual", "company"])
+    .withMessage("Business type must be either 'individual' or 'company'"),
+
+  body("governmentId")
+    .isLength({ min: 9, max: 9 })
+    .withMessage("PAN must be 9 digits")
+    .isNumeric()
+    .withMessage("PAN must contain only numbers"),
+
+  body("businessAddress")
+    .notEmpty()
+    .withMessage("Business address is required")
+    .isMongoId()
+    .withMessage("Invalid address id"),
+
+    validateResult
+
+
+    
+]
+
 export {
     validateRegisterUser, 
-    validateLoginUser
+    validateLoginUser, 
+    validateSellerRegistration
 }

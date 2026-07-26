@@ -1,10 +1,10 @@
-import { registerUserService , loginUserService } from "../services/auth.service.js";
+import { registerUserService , loginUserService, generateAccessToken , generateRefreshToken } from "../services/auth.service.js";
 import APIError from "../utility/apiError.js";
-
 import asyncHandler from "../utility/asyncHandler.js";
 import uploadOnCloudinary from "../utility/cloudinary.js";
-import User from "../models/user.model.js";
+import User from "../models/auth-models/user.model.js";
 import APIResponse from "../utility/apiResponse.js";
+import Seller from "../models/auth-models/seller.model.js";
 
 // const registerUserController = async(req , res , next) => {
 
@@ -53,85 +53,151 @@ const registerUserController = asyncHandler( async(req , res , next)=>{
 
         //get user data 
 
-        const {email , password , role, username , contact} = req.body
-         const localAvatarPath = req.file?.path
+        const {email , password , role, username} = req.body
+        //  const localAvatarPath = req.file?.path
 
-         console.log(req.body)
+        console.log(req.body , "items are")
+
+      
 
 
-         const existedUser = await User.find({
-            $or : [
-                {email}, 
-                {contact}
-            ]
-         })
+         const existedUser = await User.findOne({email})
+         console.log(existedUser)
 
          if(existedUser){
-            throw new APIError(400 , "email already exists")
+            throw new APIError(409 , "email already exists" , "USER_ALREADY_EXISTS")
          }
     
 
-        if(!localAvatarPath){
-            throw new APIError(400 , "file upload null ")
-        }
+        // if(!localAvatarPath){
+        //     throw new APIError(400 , "file upload null " , "FILE_NOT_FOUND")
+        // }
 
         //upload them to cloudinary
 
-       const avatarRes = await uploadOnCloudinary(localAvatarPath)
+    //    const avatarRes = await uploadOnCloudinary(localAvatarPath)
 
-       if(!avatarRes){
-          throw new APIError(400 , "file upload null ")
-       }
+    //    if(!avatarRes){
+    //       throw new APIError(400 , "file upload null ")
+    //    }
 
         //create a user in db 
 
         const newUser = await User.create({
              email, 
-            password , 
-            avatarRes, 
-            role , 
-            contact,
-            username
+            password ,   
+            role : role ? "buyer " : "seller", 
+            username 
         })
 
-
-       if(!newUser._id){
-            throw new APIError(500 , "cannot register user")
+         if(!newUser._id){
+            throw new APIError(500 , "cannot register user", "SERVER_ERROR")
             
        }
+
+        //generate store refresh token in cookie and in newUser obj
+
+        const refreshToken = generateRefreshToken(newUser._id);
+
+        res.cookie("refreshToken" , refreshToken, {
+            httpOnly : true,
+            secure : false,
+            maxAge : 24 * 60 * 60 * 1000
+        })
+        newUser.refreshToken = refreshToken
+        
+
+        await newUser.save()
+
+       
+
+       const accessToken = generateAccessToken(newUser._id);
+
 
 
      const userData = {
         email : newUser.email, 
         contact : newUser.contact, 
         username : newUser.username,
-        avatar : newUser.avatar
+        role : newUser.role
      }
 
 
-     return res.status(201).json(new APIResponse(200 , userData ,"user registered success" ))
+     return res.status(201).json(new APIResponse(201 ,  {user : userData , accessToken   } ,"user registered success" ))
 
 
 
-
-
-
-
-
-
-
-        //remove pass and refreshtoken from response
-
-
-        // check if user is created or not 
-
-
-        // return response
-
-
-        //if user is not created return error 
 
 })
+
+
+const registerSellerController = asyncHandler(async(req , res , next)=>{
+
+
+    // check if user is registered 
+    const userId = req.userId 
+
+    // check if user exists with this userId 
+
+    const existingUser = await User.findById(userId)
+
+    if(!existingUser){
+        const error = new APIError(401 , "user doesn't exist please register first ", "USER_NOT_FOUND")
+        throw error
+    }
+
+    // destructure all the data that came from frontend  
+
+    const {storeName , storeNumber , businessType , businessAddress , panNumber } = req.body
+    const panImageLocalPath = req.file?.path
+
+
+    //upload pan image to cloudinary
+
+    const panImgUrl = await uploadOnCloudinary(panImageLocalPath)
+
+
+    // create seller object
+
+    const seller = await Seller.create({
+        user : userId , 
+        storeName , 
+        storeNumber , 
+        businessType , 
+        businessAddress , 
+        panNumber , 
+        panImage : panImgUrl
+    })
+    
+
+    if(!seller){
+
+        throw new APIError(500 ,"cannot register seller")
+        
+    }
+
+    await seller.populate({
+    path: "user",
+    select: "-password -refreshToken -panImage -panId",
+        });
+
+
+    // for now normal isVerified true but later we will do admin verification
+
+    seller.isVerified  = true
+
+    await seller.save()
+
+    return res.status(200).json( new APIResponse(200 , seller , "seller registered successfully"))
+
+
+
+
+})
+
+
+
+
 
 
 const loginUserController = async(req , res , next)=>{
@@ -159,5 +225,6 @@ const loginUserController = async(req , res , next)=>{
 
 export { 
     registerUserController, 
-    loginUserController
+    loginUserController, 
+    registerSellerController
 }

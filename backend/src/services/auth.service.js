@@ -1,11 +1,11 @@
-import User from "../models/user.model.js"
+import User from "../models/auth-models/user.model.js"
 import bcrypt from "bcrypt"
 import config from "../config/config.js"
 import jwt from "jsonwebtoken"
 
 
 
-const generateRefreshToken = (userId)=>{
+ const generateRefreshToken = (userId)=>{
 
    return  jwt.sign({
         id : userId
@@ -13,7 +13,7 @@ const generateRefreshToken = (userId)=>{
     
 }
 
-const generateAccessToken = (userId)=>{
+ const generateAccessToken = (userId)=>{
     
     return  jwt.sign({
         id : userId
@@ -106,5 +106,5 @@ const loginUserService = async({email , password})=>{
 
 export { 
     registerUserService , 
-    loginUserService
+    loginUserService, generateAccessToken , generateRefreshToken
 }
