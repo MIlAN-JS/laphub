@@ -1,4 +1,4 @@
-import { registerUserService , loginUserService, generateAccessToken , generateRefreshToken } from "../services/auth.service.js";
+import { registerUserService , generateAccessToken , generateRefreshToken } from "../services/auth.service.js";
 import APIError from "../utility/apiError.js";
 import asyncHandler from "../utility/asyncHandler.js";
 import uploadOnCloudinary from "../utility/cloudinary.js";
@@ -9,49 +9,10 @@ import jwt from "jsonwebtoken"
 import config from "../config/config.js";
 
 
-// const registerUserController = async(req , res , next) => {
-
-//     try {
-
-       
-
-//         const {accessToken , refreshToken ,  newUser}  = await registerUserService(req.body);
-
-//         //TODO : create refresh route and authenticate according to access token 
-        
-//         res.cookie("token" , refreshToken , {
-//             httpOnly : true,
-//             secure : false,
-//             maxAge : 24 * 60 * 60 * 1000
-//         });
-
-//         res.status(201).json({
-//             message : "User registered successfully",
-//             accessToken,
-//             user : newUser
-//         })
-
-    
-
-       
 
 
 
-
-
-        
-        
-        
-//     } catch (error) {
-
-//         res.status(400).json({
-//             message : error.message
-//         })
-        
-//     }
-    
-// }
-
+// ## user registration controller
 const registerUserController = asyncHandler( async(req , res , next)=>{
 
         //get user data 
@@ -134,6 +95,9 @@ const registerUserController = asyncHandler( async(req , res , next)=>{
 })
 
 
+
+// ## seller registration controller
+
 const registerSellerController = asyncHandler(async(req , res , next)=>{
 
 
@@ -199,17 +163,35 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
 })
 
 
-
-
-
-
+//## user login controller
 const loginUserController = async(req , res , next)=>{
     
     const {email , password} = req.body
 
 
-    const {user ,accessToken , refreshToken } = await loginUserService({email , password});
+    // check if user exists
 
+    const user = await User.findOne({email}).populate("addresses")
+
+    if(!user){
+        throw new APIError(401 , "user not found" , "USER_NOT_FOUND")
+    }
+
+    // check if password is correct
+
+    const isPasswordCorrect = await user.comparePassword(password)
+
+    if(!isPasswordCorrect){
+        throw new APIError(401 , "password incorrect" , "PASSWORD_INCORRECT")
+    }
+
+    // generate access token and refresh token
+
+    const accessToken = generateAccessToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
+    user.refreshToken = refreshToken
+    await user.save()
      
      res.cookie("token" , refreshToken , {
             httpOnly : true,
@@ -217,15 +199,16 @@ const loginUserController = async(req , res , next)=>{
             maxAge : 24 * 60 * 60 * 1000
         });
 
-    res.status(201).json({
-        user, 
-        success : true , 
-        message : "login success yay!"
-    })
+        user.password = undefined;
+        user.refreshToken = undefined;
+        user.panImage = undefined;
+        user.panId = undefined;
+    res.status(200).json(new APIResponse(200 , {user  , accessToken} , "user logged in successfully"))
 
 
 }
 
+// ## refresh token controller
 const refreshTokenController = asyncHandler(async(req , res , next)=>{
 
     const refreshToken = req.cookies.refreshToken

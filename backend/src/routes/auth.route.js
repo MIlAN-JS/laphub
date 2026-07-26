@@ -21,7 +21,7 @@ authRouter.post("/register" ,upload.single("avatar") , registerUserController )
  * @description old user re-access /login 
  * @access  public
  */
-authRouter.post("/login",validateLoginUser , loginUserController )
+authRouter.post("/login", validateLoginUser , loginUserController )
 
 /**
  * @route /api/v1/auth/register-seller
@@ -41,16 +41,6 @@ authRouter.post("/refresh-token" , refreshTokenController )
 
 
 
-
-authRouter.get("/hello" , verifyUser,  async(req , res , next)=>{
-    console.log(req.userId)
-    const user = await User.findById(req.userId)
-    console.log(user)
-    res.status(200).json({
-        message : "hello world", 
-        user
-    })
-})
 
     
 
