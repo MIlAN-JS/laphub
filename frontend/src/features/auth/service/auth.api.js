@@ -2,17 +2,17 @@ import axios from "axios"
 
 
 const api = axios.create({
-    baseURL : "/api/auth", 
+    baseURL : "/api/v1/auth", 
     withCredentials : true
 })
 
 
 
-const registerUser = async({fullName , contact , email , password , isSeller})=>{
+const registerUser = async({username  , email , password , isSeller})=>{
 
      console.log("calling backend ")
 
-      const response =  await api.post("/register" , {fullName , contact , email , password , isSeller})
+      const response =  await api.post("/register" , {username  , email , password , isSeller})
       return response.data
     
     
