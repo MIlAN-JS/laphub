@@ -3,7 +3,7 @@ import APIError from "../utility/apiError.js";
 
 import asyncHandler from "../utility/asyncHandler.js";
 import uploadOnCloudinary from "../utility/cloudinary.js";
-import User from "../models/user.model.js";
+import User from "../models/auth-models/user.model.js";
 import APIResponse from "../utility/apiResponse.js";
 
 // const registerUserController = async(req , res , next) => {
@@ -133,6 +133,23 @@ const registerUserController = asyncHandler( async(req , res , next)=>{
 
 })
 
+
+const registerSellerController = asyncHandler(async(req , res , next)=>{
+
+
+    // check if user is registered 
+    const userId = req.userId 
+
+    // destructure all the data that came from frontend  
+
+    const {storeName , storeNumber , businessType , businessAddress , panNumber , panImage ,   } = req.body
+
+
+   
+
+
+
+})
 
 
 

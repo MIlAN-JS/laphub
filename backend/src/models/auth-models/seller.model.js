@@ -33,12 +33,12 @@ const sellerSchema = new mongoose.Schema(
       required: true,
     },
 
-    governmentId: {
+    panId: {
       type: String,
       required: true,
     },
 
-    governmentIdImage: {
+    panImage: {
       type: String, // Cloudinary/S3 URL
       required: true,
     },
