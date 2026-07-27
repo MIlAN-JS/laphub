@@ -1,276 +1,325 @@
-import React, { useState } from "react";
-import {
-  MdEmail,
-  MdLock,
-  MdVisibility,
-  MdVisibilityOff,
-  MdCheckCircle,
-} from "react-icons/md";
-// import { FaThumbtack , FaLaptop } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-import useAuth from "../../hook/useAuth";
-import { FaLaptop } from "react-icons/fa";
+import {
+  FiMail,
+  FiLock,
+  FiEye,
+  FiEyeOff,
+  FiMonitor,
+  FiShield,
+  FiTag,
+  FiShoppingBag,
+  FiLoader,
+  FiCpu,
+  FiAlertCircle,
+} from "react-icons/fi";
+import { FcGoogle } from "react-icons/fc";
+// Adjust this import path to wherever your custom hook lives
+import useAuth from "../../hook/useAuth.js"
 
-/**
- * Pinterest-inspired Login Page
- * ------------------------------
- * Fields: email, password
- * Includes: "remember me", forgot password link, Google OAuth button
- *
- * Usage:
- *   <LoginPage
- *     onLogin={(data) => console.log(data)}
- *     onGoogleLogin={() => triggerGoogleOAuthFlow()}
- *   />
- */
+// Same rules as the register form's email check, kept local so this
+// component doesn't depend on the register file.
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const PIN_TILES = [
-  { grad: "from-teal-400 to-cyan-500", h: "h-36", mt: "mt-2" },
-  { grad: "from-rose-400 to-red-500", h: "h-52", mt: "mt-0" },
-  { grad: "from-amber-300 to-orange-500", h: "h-40", mt: "mt-6" },
-  { grad: "from-violet-400 to-indigo-600", h: "h-48", mt: "mt-0" },
-  { grad: "from-lime-300 to-green-500", h: "h-32", mt: "mt-4" },
-  { grad: "from-pink-400 to-rose-600", h: "h-44", mt: "mt-0" },
-  { grad: "from-sky-400 to-indigo-500", h: "h-28", mt: "mt-3" },
-  { grad: "from-yellow-300 to-amber-500", h: "h-56", mt: "mt-0" },
-  { grad: "from-fuchsia-400 to-purple-600", h: "h-36", mt: "mt-8" },
-];
+function validateForm({ email, password }) {
+  const errors = {};
 
-function PinMasonry() {
-  const columns = [
-    PIN_TILES.slice(0, 3),
-    PIN_TILES.slice(3, 6),
-    PIN_TILES.slice(6, 9),
-  ];
-  return (
-    <div className="grid grid-cols-3 gap-3 w-full max-w-md">
-      {columns.map((col, i) => (
-        <div key={i} className="flex flex-col gap-3">
-          {col.map((tile, j) => (
-            <div
-              key={j}
-              className={`${tile.h} ${tile.mt} rounded-2xl bg-gradient-to-br ${tile.grad} shadow-lg shadow-black/10`}
-            />
-          ))}
-        </div>
-      ))}
-    </div>
-  );
+  if (!email.trim()) {
+    errors.email = "Email is required";
+  } else if (!EMAIL_REGEX.test(email.trim())) {
+    errors.email = "Enter a valid email address";
+  }
+
+  if (!password) {
+    errors.password = "Password is required";
+  }
+
+  return errors;
 }
 
-function FieldError({ message }) {
-  if (!message) return null;
-  return <p className="mt-1.5 text-xs font-medium text-red-600">{message}</p>;
-}
+export default function LoginComponent() {
+  // Assumed to mirror useAuth's handleRegister: handleLogin({ email, password })
+  // and, for Google, a handleGoogleLogin() that kicks off the OAuth redirect/popup.
+  // Adjust names/signatures to match your actual hook.
+  const { handleLogin, handleGoogleLogin } = useAuth();
 
-export default function LoginComponent({ onLogin, onGoogleLogin }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    rememberMe: false,
   });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
-  const loading = useSelector(state => state.auth.loading)
-  const user  = useSelector(state => state.auth.user)
+  // Matches your auth slice's initialState field names.
+  const { isLoading, error } = useSelector((state) => state.auth);
 
-  const { handleLogin } = useAuth()
-  
-
-  const handleChange = (field) => (e) => {
-    const value = field === "rememberMe" ? e.target.checked : e.target.value;
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
   };
 
-  const validate = () => {
-    const next = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!formData.email.trim()) next.email = "Enter your email";
-    else if (!emailRegex.test(formData.email)) next.email = "Enter a valid email address";
-    if (!formData.password) next.password = "Enter your password";
-
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const handleSubmit = (e) => {
+  const onSubmit = (e) => {
     e.preventDefault();
-    if (!validate()) return;
-    setSubmitted(true);
-   
 
-    handleLogin({email : formData.email , password : formData.password})
+    const errors = validateForm(formData);
+    setFieldErrors(errors);
 
-  };
+    if (Object.keys(errors).length > 0) return;
 
-  const handleGoogleClick = async () => {
-    setGoogleLoading(true);
-    try {
-      if (onGoogleLogin) await onGoogleLogin();
-      else console.log("Google OAuth login clicked");
-    } finally {
-      setGoogleLoading(false);
-    }
+    handleLogin(formData);
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col md:flex-row">
-      {/* Left visual panel — hidden on mobile */}
-      <div className="hidden md:flex md:w-1/2 lg:w-3/5 relative overflow-hidden bg-gradient-to-br from-red-50 via-orange-50 to-rose-50 items-center justify-center p-10 lg:p-16">
-        <div className="absolute -top-16 -left-16 h-72 w-72 rounded-full bg-red-200/40 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-orange-200/40 blur-3xl" />
+    <div className="min-h-screen w-full flex bg-[#F8FAFC]">
+      {/* Left brand panel — hidden on small screens */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#2563EB] via-[#1D4ED8] to-[#0F172A]">
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.07]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern
+              id="circuit"
+              width="60"
+              height="60"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M0 30h20M40 30h20M30 0v20M30 40v20"
+                stroke="white"
+                strokeWidth="1"
+                fill="none"
+              />
+              <circle cx="30" cy="30" r="3" fill="white" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#circuit)" />
+        </svg>
 
-        <div className="relative z-10 flex flex-col items-center gap-8 max-w-lg">
-          <PinMasonry />
-          <div className="text-center">
-            <h2 className="text-3xl lg:text-4xl font-extrabold text-neutral-900 tracking-tight leading-tight">
-              Welcome back
-            </h2>
-            <p className="mt-3 text-neutral-600 text-base lg:text-lg">
-              Pick up right where you left off — your saved finds and your
-              store are both waiting.
-            </p>
+        <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-sm">
+              <FiCpu className="w-5 h-5 text-[#06B6D4]" />
+            </div>
+            <span className="text-lg font-semibold tracking-tight">
+              LapHub
+            </span>
           </div>
+
+          <div className="max-w-sm">
+            <FiMonitor className="w-12 h-12 text-[#06B6D4] mb-6" />
+            <h1 className="text-3xl font-bold leading-tight mb-3">
+              Welcome back to the marketplace built for hardware people.
+            </h1>
+            <p className="text-slate-300 text-sm mb-8">
+              Pick up right where you left off — browsing, listing, or both.
+            </p>
+
+            <ul className="space-y-4">
+              <li className="flex items-center gap-3 text-sm text-slate-200">
+                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <FiShield className="w-4 h-4 text-[#06B6D4]" />
+                </span>
+                Verified sellers, every listing checked
+              </li>
+              <li className="flex items-center gap-3 text-sm text-slate-200">
+                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <FiTag className="w-4 h-4 text-[#F97316]" />
+                </span>
+                Real-time price comparisons on every deal
+              </li>
+              <li className="flex items-center gap-3 text-sm text-slate-200">
+                <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                  <FiShoppingBag className="w-4 h-4 text-[#22C55E]" />
+                </span>
+                Sell your own gear in minutes
+              </li>
+            </ul>
+          </div>
+
+          <p className="text-xs text-slate-400">
+            &copy; {new Date().getFullYear()} LapHub. All rights reserved.
+          </p>
         </div>
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-5 py-10 sm:px-8 md:px-10 lg:px-16">
-        <div className="w-full max-w-sm">
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="h-14 w-14 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-600/30">
-              <FaLaptop className="text-white text-2xl rotate-180" />
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          {/* Mobile-only brand mark */}
+          <div className="flex lg:hidden items-center gap-2 mb-8">
+            <div className="w-9 h-9 rounded-lg bg-[#2563EB] flex items-center justify-center">
+              <FiCpu className="w-5 h-5 text-white" />
             </div>
-            <h1 className="mt-4 text-2xl font-extrabold text-neutral-900 tracking-tight">
-              Log in to your account
-            </h1>
-            <p className="mt-1 text-sm text-neutral-500 text-center">
-              Enter your details or continue with Google
-            </p>
+            <span className="text-lg font-semibold tracking-tight text-[#0F172A]">
+              LapHub
+            </span>
           </div>
 
-          {submitted ? (
-            <div className="rounded-2xl border border-green-200 bg-green-50 p-6 text-center">
-              <MdCheckCircle className="mx-auto text-4xl text-green-600" />
-              <p className="mt-3 font-semibold text-green-800">
-                Logged in successfully!
-              </p>
-              <p className="mt-1 text-sm text-green-700">
-                Welcome back, {formData.email.split("@")[0]}.
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Google OAuth button */}
-              <button
-                type="button"
-                onClick={handleGoogleClick}
-                disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-white hover:bg-neutral-50 active:bg-neutral-100 disabled:opacity-60 disabled:cursor-not-allowed text-sm font-semibold text-neutral-800 py-3.5 transition-colors shadow-sm"
-              >
-                <FcGoogle className="text-xl" />
-                {googleLoading ? "Connecting..." : "Continue with Google"}
-              </button>
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-8">
+            <h2 className="text-2xl font-bold text-[#0F172A] mb-1">
+              Sign in to your account
+            </h2>
+            <p className="text-sm text-[#64748B] mb-6">
+              Enter your details to continue.
+            </p>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-6">
-                <span className="h-px flex-1 bg-neutral-200" />
-                <span className="text-xs font-medium text-neutral-400 uppercase tracking-wide">
-                  or
-                </span>
-                <span className="h-px flex-1 bg-neutral-200" />
+            {error && (
+              <div className="mb-5 rounded-lg border border-[#F97316]/30 bg-[#F97316]/10 px-4 py-3 text-sm text-[#F97316]">
+                {error}
+              </div>
+            )}
+
+            {/* Google OAuth */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full flex items-center justify-center gap-2.5 border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] text-[#334155] text-sm font-medium py-2.5 rounded-lg transition"
+            >
+              <FcGoogle className="w-5 h-5" />
+              Continue with Google
+            </button>
+
+            <div className="flex items-center gap-3 my-6">
+              <span className="h-px flex-1 bg-[#E2E8F0]" />
+              <span className="text-xs text-[#64748B]">or sign in with email</span>
+              <span className="h-px flex-1 bg-[#E2E8F0]" />
+            </div>
+
+            <form onSubmit={onSubmit} className="space-y-5" noValidate>
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-[#334155] mb-1.5"
+                >
+                  Email address
+                </label>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#64748B]" />
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    aria-invalid={!!fieldErrors.email}
+                    aria-describedby={
+                      fieldErrors.email ? "email-error" : undefined
+                    }
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:ring-2 ${
+                      fieldErrors.email
+                        ? "border-[#F97316] focus:border-[#F97316] focus:ring-[#F97316]/20"
+                        : "border-[#E2E8F0] focus:border-[#2563EB] focus:ring-[#2563EB]/20"
+                    }`}
+                  />
+                </div>
+                {fieldErrors.email && (
+                  <p
+                    id="email-error"
+                    className="mt-1.5 flex items-center gap-1 text-xs text-[#F97316]"
+                  >
+                    <FiAlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
-              <form onSubmit={handleSubmit} noValidate className="space-y-4">
-                {/* Email */}
-                <div>
-                  <div
-                    className={`flex items-center gap-3 rounded-2xl border bg-neutral-50 px-4 py-3.5 transition-colors focus-within:border-red-500 focus-within:bg-white ${
-                      errors.email ? "border-red-400" : "border-neutral-200"
-                    }`}
+              {/* Password */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-[#334155]"
                   >
-                    <MdEmail className="text-neutral-400 text-xl shrink-0" />
-                    <input
-                      type="email"
-                      placeholder="Email address"
-                      value={formData.email}
-                      onChange={handleChange("email")}
-                      className="w-full bg-transparent outline-none text-sm font-medium text-neutral-900 placeholder:text-neutral-400"
-                    />
-                  </div>
-                  <FieldError message={errors.email} />
-                </div>
-
-                {/* Password */}
-                <div>
-                  <div
-                    className={`flex items-center gap-3 rounded-2xl border bg-neutral-50 px-4 py-3.5 transition-colors focus-within:border-red-500 focus-within:bg-white ${
-                      errors.password ? "border-red-400" : "border-neutral-200"
-                    }`}
-                  >
-                    <MdLock className="text-neutral-400 text-xl shrink-0" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Password"
-                      value={formData.password}
-                      onChange={handleChange("password")}
-                      className="w-full bg-transparent outline-none text-sm font-medium text-neutral-900 placeholder:text-neutral-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((s) => !s)}
-                      className="text-neutral-400 hover:text-neutral-600 shrink-0"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? (
-                        <MdVisibilityOff className="text-xl" />
-                      ) : (
-                        <MdVisibility className="text-xl" />
-                      )}
-                    </button>
-                  </div>
-                  <FieldError message={errors.password} />
-                </div>
-
-                {/* Remember me + Forgot password */}
-                <div className="flex items-center justify-between pt-1">
-                  <label className="flex items-center gap-2 text-sm text-neutral-600 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={formData.rememberMe}
-                      onChange={handleChange("rememberMe")}
-                      className="h-4 w-4 rounded border-neutral-300 text-red-600 focus:ring-red-500"
-                    />
-                    Remember me
+                    Password
                   </label>
-                  <a href="#" className="text-sm font-semibold text-red-600 hover:underline">
+                  <a
+                    href="/forgot-password"
+                    className="text-xs font-medium text-[#06B6D4] hover:text-[#2563EB] transition"
+                  >
                     Forgot password?
                   </a>
                 </div>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#64748B]" />
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    aria-invalid={!!fieldErrors.password}
+                    aria-describedby={
+                      fieldErrors.password ? "password-error" : undefined
+                    }
+                    className={`w-full pl-10 pr-11 py-2.5 rounded-lg border bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:ring-2 ${
+                      fieldErrors.password
+                        ? "border-[#F97316] focus:border-[#F97316] focus:ring-[#F97316]/20"
+                        : "border-[#E2E8F0] focus:border-[#2563EB] focus:ring-[#2563EB]/20"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#334155] transition"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <FiEyeOff className="w-4.5 h-4.5" />
+                    ) : (
+                      <FiEye className="w-4.5 h-4.5" />
+                    )}
+                  </button>
+                </div>
+                {fieldErrors.password && (
+                  <p
+                    id="password-error"
+                    className="mt-1.5 flex items-center gap-1 text-xs text-[#F97316]"
+                  >
+                    <FiAlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {fieldErrors.password}
+                  </p>
+                )}
+              </div>
 
-                <button
-                  type="submit"
-                  className="w-full rounded-2xl bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-base py-3.5 transition-colors shadow-md shadow-red-600/20"
-                >
-                  Log in
-                </button>
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-lg transition shadow-sm"
+              >
+                {isLoading ? (
+                  <>
+                    <FiLoader className="w-4 h-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
+              </button>
+            </form>
 
-                <p className="text-center text-sm text-neutral-600 pt-2">
-                  Don't have an account?{" "}
-                  <a href="#" className="font-semibold text-red-600 hover:underline">
-                    Sign up
-                  </a>
-                </p>
-              </form>
-            </>
-          )}
+            <p className="text-center text-sm text-[#64748B] mt-6">
+              Don&apos;t have an account?{" "}
+              <a
+                href="/register"
+                className="font-medium text-[#06B6D4] hover:text-[#2563EB] transition"
+              >
+                Create one
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
