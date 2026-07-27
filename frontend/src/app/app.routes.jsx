@@ -7,29 +7,36 @@ import PublicLayout from "../layout/public.layout.jsx";
 import PrivateLayout from "../layout/private.layout.jsx";
 
 
-export const router = createBrowserRouter([
-
-
+    export const router = createBrowserRouter([
     {
-        path:"/",
-        element:<PrivateLayout><App/></PrivateLayout>
-    }, 
-    {
-        path : "/login",
-        element :
-        <PublicLayout>
-       <LoginPage/>
-        </PublicLayout>
-       
-    }, 
-    {
-        path : "/register",
-        element : 
-        <PublicLayout> <RegisterPage/></PublicLayout>
-       
-    }
-
-])
-
+        path: "/",
+        element: <App />,
+        children: [
+        {
+            element: <PrivateLayout />,
+            children: [
+            {
+                index: true,
+                element: <h1>Home</h1>,
+            },
+            ],
+        },
+        
+        {
+            element: <PublicLayout />,
+            children: [
+            {
+                path: "login",
+                element: <LoginPage />,
+            },
+            {
+                path: "register",
+                element: <RegisterPage />,
+            },
+            ],
+        },
+        ],
+    },
+    ]);
 
 

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 
 
 
+
 const useAuth = ()=>{
 
 
@@ -38,6 +39,29 @@ const useAuth = ()=>{
     console.log("cannot register user" , error.message)
         }
     }
+
+    const handleLogin = async({email , password})=>{
+        try {
+            dispatch(authStart())
+            const response = await loginUserService({   email , password });
+            console.log("response of login user" , response)
+            dispatch(authSuccess({
+                user : response.data.user, 
+                accessToken : response.data.accessToken
+            }))
+            navigate("/")
+            
+        } catch (error) {
+              const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong";
+
+    dispatch(authFailure(message));
+    console.log("cannot register user" , error.message)
+        }
+        
+    }
     const handleRefresh = async()=>{
 
         try {
@@ -64,11 +88,38 @@ const useAuth = ()=>{
         }
     }
 
+    // const handleGetUser = async()=>{
+    //     try {
+
+    //         dispatch(authStart())
+    //         const response = await getUserService();
+    //         console.log("response of get user" , response)
+    //         dispatch(authSuccess({
+    //             user : response.data.user, 
+    //             accessToken : response.data.accessToken
+    //         }))
+            
+            
+    //     } catch (error) {
+       
+    // const message =
+    //   error.response?.data?.message ||
+    //   error.message ||
+    //   "Something went wrong";
+
+    // dispatch(authFailure(message));
+    // console.log("cannot get user " , error.message)
+    //     }
+
+            
+        
+    // }
+
 
    
 
 
-    return {handleRegister , handleRefresh}
+    return {handleRegister , handleRefresh , handleLogin}
 
 
 

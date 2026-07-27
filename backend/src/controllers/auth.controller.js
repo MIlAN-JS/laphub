@@ -193,7 +193,7 @@ const loginUserController = async(req , res , next)=>{
     user.refreshToken = refreshToken
     await user.save()
      
-     res.cookie("token" , refreshToken , {
+     res.cookie("refreshToken" , refreshToken , {
             httpOnly : true,
             secure : false,
             maxAge : 24 * 60 * 60 * 1000
@@ -249,9 +249,30 @@ const refreshTokenController = asyncHandler(async(req , res , next)=>{
 
 })
 
+
+// getme controller 
+
+// const getMeController = asyncHandler(async(req , res , next)=>{
+
+//     const userId = req.userId
+
+//     console.log(userId , "user id is ")
+
+//     const user = await User.findById(userId).populate("addresses").select("-password -refreshToken -panImage -panId")
+
+//     if(!user){
+//         throw new APIError(401 , "user not found " , "USER_NOT_FOUND")
+//     }
+
+//     const accessToken = generateAccessToken(user._id);
+    
+//     res.status(200).json(new APIResponse(200 , {user , accessToken} , "user found successfully"))
+// })
+
 export { 
     registerUserController, 
     loginUserController, 
     registerSellerController, 
-    refreshTokenController
+    refreshTokenController, 
+   
 }

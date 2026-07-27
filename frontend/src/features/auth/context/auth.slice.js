@@ -56,10 +56,12 @@ const authSlice = createSlice ({
         }, 
 
         authFailure : (state , action)=>{
+            state.user = null
             state.isAuthenticated = false
             state.error = action.payload
             state.isLoading = false
             state.accessToken = null
+           
         },
         clearError : (state)=>{
             state.error = null

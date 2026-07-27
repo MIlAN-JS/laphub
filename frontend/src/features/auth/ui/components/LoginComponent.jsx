@@ -41,7 +41,7 @@ export default function LoginComponent() {
   // Assumed to mirror useAuth's handleRegister: handleLogin({ email, password })
   // and, for Google, a handleGoogleLogin() that kicks off the OAuth redirect/popup.
   // Adjust names/signatures to match your actual hook.
-  const { handleLogin, handleGoogleLogin } = useAuth();
+  const { handleLogin } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -179,7 +179,10 @@ export default function LoginComponent() {
             {/* Google OAuth */}
             <button
               type="button"
-              onClick={handleGoogleLogin}
+              onClick={()=>{
+                console.log("dont forget to add google login ")
+              }}
+              
               className="w-full flex items-center justify-center gap-2.5 border border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] text-[#334155] text-sm font-medium py-2.5 rounded-lg transition"
             >
               <FcGoogle className="w-5 h-5" />

@@ -40,6 +40,13 @@ authRouter.post("/register-seller",verifyUser ,validateSellerRegistration , uplo
 authRouter.post("/refresh-token" , refreshTokenController )
 
 
+/**
+ * @route /api/v1/auth/get-me
+ * @description get logged in user 
+ * @access 
+ */
+// authRouter.get("/get-me" ,verifyUser,  getMeController)
+
 
 
     
