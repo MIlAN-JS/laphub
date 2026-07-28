@@ -59,6 +59,7 @@ const sellerSchema = new mongoose.Schema(
       default: false,
     },
     
+    
   },
   {
     timestamps: true,

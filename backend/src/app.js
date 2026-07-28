@@ -21,20 +21,11 @@ app.use(cookieParser());
 
 // routes 
 import authRouter from "./routes/auth.route.js";
+import laptopRouter from "./routes/laptop.route.js";
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/laptop", laptopRouter);
 
-    app.get("/api/v1/error" , (req , res ,next)=>{
-        try {
-
-            const error = new APIError(400 , "Checking error", "CHECKING_ERROR")
-           
-            throw error
-            
-        } catch (error) {
-            next(error)
-        }
-    })
 
 
 
