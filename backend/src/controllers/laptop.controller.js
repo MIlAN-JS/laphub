@@ -3,18 +3,23 @@ import uploadOnCloudinary from "../utility/cloudinary.js";
 import LaptopVariant from "../models/laptop-models/laptopVariants.model.js";
 import APIResponse from "../utility/apiResponse.js";
 import asyncHandler from "../utility/asyncHandler.js";
-
+import APIError from "../utility/apiError.js";
+import Seller from "../models/auth-models/seller.model.js";
 
 const createLaptopProductController = asyncHandler(async(req , res , next)=>{
 
     // check if user is registered 
     const userId = req.userId
 
-    const {title , description , brand , battery , ram , processor , storage , price , display, variants } = req.body
+    const {title , description ,  brand , battery , ram , processor , storage , price , display, variants } = req.body
 
 
+    
 
-    const thumbnail = req.file?.path
+    const thumbnail = req.files.thumbnail[0].path
+    
+   
+
 
     if(!thumbnail){
         const error = new APIError(401 , "thumbnail is required " , "THUMBNAIL_REQUIRED")
@@ -22,6 +27,7 @@ const createLaptopProductController = asyncHandler(async(req , res , next)=>{
     }
    
     // check if seller exists with this userId
+    console.log(userId)
 
     const seller = await Seller.findOne({user : userId})
 
@@ -43,19 +49,30 @@ const createLaptopProductController = asyncHandler(async(req , res , next)=>{
 
     }
 
+    const cursor = 0; // it is used to count how many images are seperated from variantImages Array 
+    const variantImages = req.files.variantImages[1]
+   
 
     const newVariants = await Promise.all(
 
         variants.map(async(variant)=>{
+
+
+            // seperate single variant  images from the variant images img array
+
+            const imageCount = variant.imageCount
+            const images = variantImages.slice(cursor , cursor + imageCount);
+            cursor += imageCount;
+
             // upload image to cloudinary
-            const imageUrls = await uploadOnCloudinary(variant.image)
+            const imageUrls = await Promise.all(images.map(async(image)=>{
+                const imageUrl = await uploadOnCloudinary(image.path)
+                return imageUrl
+            }))
 
+           
 
-
-
-            // create document 
-
-            return LaptopVariant.create({
+            return await LaptopVariant.create({
                 product: newLaptop._id,
                 color: variant.color,
                 ram: variant.ram,
@@ -79,6 +96,8 @@ const createLaptopProductController = asyncHandler(async(req , res , next)=>{
 
 
     res.status(201).json(new APIResponse(201 , {product : newLaptop , variants: newVariants} , "new product created successfully"))
+
+
 
 
    

@@ -54,10 +54,14 @@ const laptopVariantSchema = new mongoose.Schema(
       trim: true,
     },
 
-    image: 
-      {
-        type: String,
-      },
+    images: 
+      [
+        {
+          type: String,
+          required: true,
+          trim: true,
+        },
+      ], 
     
 
     status: {

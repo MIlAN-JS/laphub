@@ -63,9 +63,9 @@ const validateCreateProduct = [
 
 
  const validateProductVariant = [
-  body("variants")
-    .isArray({ min: 1 })
-    .withMessage("At least one product variant is required."),
+//   body("variants")
+//     .isArray({ min: 1 })
+//     .withMessage("At least one product variant is required."),
 
   body("variants.*.color")
     .trim()

@@ -107,6 +107,7 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
     // check if user exists with this userId 
 
     const existingUser = await User.findById(userId)
+    console.log(existingUser)
 
     if(!existingUser){
         const error = new APIError(401 , "user doesn't exist please register first ", "USER_NOT_FOUND")
