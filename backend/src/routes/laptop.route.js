@@ -12,7 +12,7 @@ const laptopRouter = Router()
 
 laptopRouter.post("/create", verifyUser ,upload.fields([
         { name: 'thumbnail', maxCount: 1 },
-       { name: 'variantImages', maxCount: 20 }
+       { name: 'variantImage', maxCount: 20 }
 ]) , validateCreateProduct, validateProductVariant,createLaptopProductController)
 
 

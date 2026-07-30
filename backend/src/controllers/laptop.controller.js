@@ -8,97 +8,107 @@ import Seller from "../models/auth-models/seller.model.js";
 
 const createLaptopProductController = asyncHandler(async(req , res , next)=>{
 
-    // check if user is registered 
+    // check if user is registered as a seller
     const userId = req.userId
 
-    const {title , description ,  brand , battery , ram , processor , storage , price , display, variants } = req.body
+    const existingSeller = await Seller.findOne({ user : userId})
+    console.log(existingSeller)
 
-
-    
-
-    const thumbnail = req.files.thumbnail[0].path
-    
-   
-
-
-    if(!thumbnail){
-        const error = new APIError(401 , "thumbnail is required " , "THUMBNAIL_REQUIRED")
-        throw error
-    }
-   
-    // check if seller exists with this userId
-    console.log(userId)
-
-    const seller = await Seller.findOne({user : userId})
-
-    if(!seller){
-        const error = new APIError(401 , "user is not a seller " , "UNAUTHORIZED_ACCESS")
+    if(!existingSeller){
+        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
         throw error
     }
 
-     const thumbnailUrl = await uploadOnCloudinary(thumbnail)
+
+    const {title , description, brand, battery, display } = req.body
+
+    const variants = JSON.parse(req.body.variants)
+
+    // fetching product  thumbnail from req.files
+
+    const thumbnailPath = req.files.thumbnail[0].path
 
 
-    const newLaptop = await laptopModel.create({
-        title , description , brand , battery , display, thumbnail: thumbnailUrl  , seller: seller._id
+    //fetching variant images from req.files
+
+    const variantImages = req.files.variantImage
+    // console.log(variantImages , "variant images are : ")
+
+
+
+    //uploading thumbnail to cloudinary
+
+    const thumbnailUrl = await uploadOnCloudinary(thumbnailPath)
+
+    // creating a new product 
+
+    const newProduct = await laptopModel.create({
+        title , description , brand , battery , display , thumbnail : thumbnailUrl , seller : existingSeller._id
     })
 
-    if(!newLaptop){
-        const error = new APIError(400 , "Server Error Laptop cannot created " , "LAPTOP_NOT_CREATED")
-        throw error
+    
 
-    }
+    // creating variants for the product
 
-    const cursor = 0; // it is used to count how many images are seperated from variantImages Array 
-    const variantImages = req.files.variantImages[1]
-   
-
+    let fetchedImages = 0 
     const newVariants = await Promise.all(
-
         variants.map(async(variant)=>{
+            
+            const {color , ram , storage , price , compareAtPrice , stock , sku , isDefaultVariant, imageCount} 
+            = variant
+
+            // fetch images only of relative variant using slice method 
+            // console.log(variantImages , "before slicing")
+            const variantImgs = variantImages.slice(fetchedImages, imageCount + fetchedImages);
+            fetchedImages = fetchedImages + imageCount;
 
 
-            // seperate single variant  images from the variant images img array
+            // upload all the fetched image of the variant to cloudinary 
 
-            const imageCount = variant.imageCount
-            const images = variantImages.slice(cursor , cursor + imageCount);
-            cursor += imageCount;
 
-            // upload image to cloudinary
-            const imageUrls = await Promise.all(images.map(async(image)=>{
-                const imageUrl = await uploadOnCloudinary(image.path)
-                return imageUrl
-            }))
+            const imageUrls = await Promise.all(
+                variantImgs.map(async(image)=>{
+                    console.log( "image is" , image  )
+                    const imageUrl = await uploadOnCloudinary(image.path)
+                    return imageUrl
+                })
+            )
 
-           
+            console.log(fetchedImages , imageUrls )
 
-            return await LaptopVariant.create({
-                product: newLaptop._id,
-                color: variant.color,
-                ram: variant.ram,
-                storage: variant.storage,
-                processor: variant.processor,
-                price: variant.price,
-                compareAtPrice: variant.compareAtPrice,
-                stock: variant.stock,
-                sku: variant.sku,
-                isDefaultVariant: variant.isDefault,
-                images: imageUrls,
+
+            console.log(imageUrls , "image Urls are")
+            // creating a new variant for the product
+
+            const newVariant = await LaptopVariant.create({
+                product : newProduct._id,
+                color,
+                ram,
+                storage,
+                price,
+                compareAtPrice,
+                stock,
+                sku,
+                isDefaultVariant,
+                images : imageUrls
             })
 
+            return newVariant
 
 
 
+
+
+            
         })
-
-       
     )
 
 
-    res.status(201).json(new APIResponse(201 , {product : newLaptop , variants: newVariants} , "new product created successfully"))
+    
+    res.status(201).json(new APIResponse(201 , {product : newProduct , variants: newVariants} , "new product created successfully"))
 
 
-
+  
 
    
 })
