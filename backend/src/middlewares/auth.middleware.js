@@ -9,7 +9,7 @@ import config from "../config/config.js"
 
       const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
 
-      console.log(object)
+
 
     
       if(!accessToken){

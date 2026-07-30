@@ -15,7 +15,7 @@ const sellerSchema = new mongoose.Schema(
       trim: true,
     },
 
-    phoneNumber: {
+    storeNumber: {
       type: String,
       required: true,
       trim: true,

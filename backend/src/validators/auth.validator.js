@@ -57,7 +57,7 @@ const validateSellerRegistration = [
     .isLength({ min: 3, max: 50 })
     .withMessage("Store name must be between 3 and 50 characters"),
 
-  body("phoneNumber")
+  body("storeNumber")
     .trim()
     .notEmpty()
     .withMessage("Phone number is required")
@@ -70,17 +70,17 @@ const validateSellerRegistration = [
     .isIn(["individual", "company"])
     .withMessage("Business type must be either 'individual' or 'company'"),
 
-  body("governmentId")
+  body("panNumber")
     .isLength({ min: 9, max: 9 })
     .withMessage("PAN must be 9 digits")
     .isNumeric()
     .withMessage("PAN must contain only numbers"),
 
-  body("businessAddress")
-    .notEmpty()
-    .withMessage("Business address is required")
-    .isMongoId()
-    .withMessage("Invalid address id"),
+  // body("businessAddress")
+  //   .notEmpty()
+  //   .withMessage("Business address is required")
+  //   .isMongoId()
+  //   .withMessage("Invalid address id"),
 
     validateResult
 
