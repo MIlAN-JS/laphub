@@ -1,37 +1,20 @@
 import axios from "axios"
 import store from "../../../app/store"
+import api from "../../../app/app.api.js"
 
-const api = axios.create({
-    baseURL : "/api/v1/auth", 
-    withCredentials : true
-})
-
-api.interceptors.request.use((config) => {
-
-    const token = store.getState().auth.accessToken;
-
-   console.log("hello world")
-    console.log(config)
-
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-});
 
 const registerUser = async({username  , email , password , isSeller})=>{
 
      console.log("calling backend ")
 
-      const response =  await api.post("/register" , {username  , email , password , isSeller})
+      const response =  await api.post("/auth/register" , {username  , email , password , isSeller})
       return response.data
     
     
 }
 
 const loginUserService = async({email , password})=> {
-    const response = await api.post("/login", {email , password})
+    const response = await api.post("/auth/login", {email , password})
     return response.data
 }
 
@@ -42,7 +25,7 @@ const loginUserService = async({email , password})=> {
 // }
 
  const refreshToken = async()=> {
-    const response = await api.post("/refresh-token")
+    const response = await api.post("/auth/refresh-token")
     return response.data
 }
 

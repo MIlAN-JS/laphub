@@ -16,6 +16,7 @@ import {
 } from "react-icons/fi";
 // Adjust this import path to wherever your custom hook lives
 import useAuth from "../../hook/useAuth";
+import Loader from "../../../../components/Loader";
 
 // Keep validation rules in one place so they're easy to tune.
 const USERNAME_REGEX = /^[a-zA-Z0-9_ ]+$/;
@@ -91,6 +92,10 @@ export default function RegisterComponent() {
 
     handleRegister(formData);
   };
+
+  if(isLoading){
+    return <Loader/>
+  }
 
   return (
     <div className="min-h-screen w-full flex bg-[#F8FAFC]">

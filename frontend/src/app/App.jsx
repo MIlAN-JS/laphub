@@ -7,9 +7,10 @@ import { Outlet } from 'react-router-dom'
 
 
 const App = () => {
+  console.log("rendered app ")
   const user = useSelector(state => state.auth.user)
   const {handleRefresh } = useAuth()
-  console.log(user)
+  
 
   useEffect(()=>{
 
@@ -24,7 +25,7 @@ const App = () => {
   return (
     <div className='text-3xl text-blue-800 '>
      <Outlet/>
-     hello
+     
 
     </div>
   )
