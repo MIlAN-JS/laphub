@@ -6,7 +6,7 @@
     
     const { user, isLoading, error } = useSelector((state) => state.auth);
 
-    if (loading) {
+    if (isLoading) {
       return <h1>Loading...</h1>;
     }
 

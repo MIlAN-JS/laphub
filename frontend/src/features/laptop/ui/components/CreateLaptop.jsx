@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import  useLaptop from "../../hook/useLaptop.js";
 import {
   FiUpload,
   FiX,
@@ -16,6 +17,9 @@ import {
   FiImage,
   FiDollarSign,
   FiLoader,
+  FiEye,
+  FiEdit2,
+  FiCheckCircle,
 } from "react-icons/fi";
 
 const MAX_VARIANT_IMAGES = 5;
@@ -36,7 +40,7 @@ function makeEmptyVariant(isDefaultVariant = false) {
   };
 }
 
-export default function CreateLaptopComponent() {
+export default function CreatelaptopComponent() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -55,6 +59,7 @@ export default function CreateLaptopComponent() {
   const [variantImage, setVariantImage] = useState([[]]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const thumbnailInputRef = useRef(null);
   const variantImageInputRefs = useRef([]);
@@ -159,8 +164,15 @@ export default function CreateLaptopComponent() {
   };
 
   // ---------- submit ----------
-  const onSubmit = (e) => {
+  const openPreview = (e) => {
     e.preventDefault();
+    setShowPreview(true);
+  };
+
+  const { handleCreateLaptop } = useLaptop();
+
+  // --------- confirm submit ----------
+  const handleConfirmSubmit = async() => {
     setIsSubmitting(true);
 
     const payload = {
@@ -174,8 +186,11 @@ export default function CreateLaptopComponent() {
       variantImage,
     };
 
+    
+    await handleCreateLaptop(payload);
     console.log("New laptop payload:", payload);
     setIsSubmitting(false);
+    setShowPreview(false);
   };
 
   return (
@@ -196,7 +211,7 @@ export default function CreateLaptopComponent() {
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-6">
+        <form onSubmit={openPreview} className="space-y-6">
           {/* ---------------- Basic info ---------------- */}
           <section className="bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-5 sm:p-6">
             <h2 className="text-base font-semibold text-[#0F172A] mb-4">
@@ -612,24 +627,219 @@ export default function CreateLaptopComponent() {
             </div>
           </section>
 
-          {/* ---------------- Submit ---------------- */}
+          {/* ---------------- Preview trigger ---------------- */}
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition shadow-sm"
+              className="flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition shadow-sm"
             >
-              {isSubmitting ? (
-                <>
-                  <FiLoader className="w-4 h-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "List laptop"
-              )}
+              <FiEye className="w-4 h-4" />
+              Preview listing
             </button>
           </div>
         </form>
+
+        {/* ---------------- Preview modal ---------------- */}
+        {showPreview && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/60">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+              {/* modal header */}
+              <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#E2E8F0] shrink-0">
+                <div>
+                  <h2 className="text-lg font-bold text-[#0F172A]">
+                    Preview listing
+                  </h2>
+                  <p className="text-xs text-[#64748B]">
+                    This is what you're about to publish. Check it over before confirming.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition shrink-0"
+                  aria-label="Close preview"
+                >
+                  <FiX className="w-4.5 h-4.5" />
+                </button>
+              </div>
+
+              {/* modal body */}
+              <div className="overflow-y-auto px-5 sm:px-6 py-5 space-y-6">
+                {/* title block */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-32 h-32 rounded-xl overflow-hidden border border-[#E2E8F0] bg-[#F8FAFC] shrink-0">
+                    {thumbnailPreview ? (
+                      <img
+                        src={thumbnailPreview}
+                        alt={formData.title || "Thumbnail"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[#64748B]">
+                        <FiImage className="w-6 h-6" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      {formData.brand || "Brand not set"}
+                    </p>
+                    <h3 className="text-lg font-bold text-[#0F172A] break-words">
+                      {formData.title || "Untitled laptop"}
+                    </h3>
+                    <p className="text-sm text-[#64748B] mt-1.5 line-clamp-3">
+                      {formData.description || "No description added yet."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* specs */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg border border-[#E2E8F0] px-3.5 py-2.5">
+                    <p className="text-xs text-[#64748B] flex items-center gap-1.5 mb-0.5">
+                      <FiMonitor className="w-3.5 h-3.5" />
+                      Display
+                    </p>
+                    <p className="text-sm font-medium text-[#0F172A]">
+                      {formData.display || "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#E2E8F0] px-3.5 py-2.5">
+                    <p className="text-xs text-[#64748B] flex items-center gap-1.5 mb-0.5">
+                      <FiBatteryCharging className="w-3.5 h-3.5" />
+                      Battery
+                    </p>
+                    <p className="text-sm font-medium text-[#0F172A]">
+                      {formData.battery || "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* variants */}
+                <div>
+                  <p className="text-sm font-semibold text-[#0F172A] mb-3">
+                    Variants ({variants.length})
+                  </p>
+
+                  <div className="space-y-3">
+                    {variants.map((variant, index) => (
+                      <div
+                        key={index}
+                        className={`rounded-xl border p-4 ${
+                          variant.isDefaultVariant
+                            ? "border-[#2563EB] bg-[#2563EB]/[0.03]"
+                            : "border-[#E2E8F0]"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <p className="text-sm font-semibold text-[#0F172A]">
+                            {variant.color || "Unnamed color"} · {variant.ram || "—"} ·{" "}
+                            {variant.storage || "—"}
+                          </p>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {variant.isDefaultVariant && (
+                              <span className="flex items-center gap-1 text-[10px] font-semibold bg-[#2563EB] text-white px-2 py-0.5 rounded-full">
+                                <FiStar className="w-2.5 h-2.5" />
+                                Default
+                              </span>
+                            )}
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                variant.status === "active"
+                                  ? "bg-[#22C55E]/10 text-[#22C55E]"
+                                  : variant.status === "draft"
+                                  ? "bg-[#64748B]/10 text-[#64748B]"
+                                  : "bg-[#F97316]/10 text-[#F97316]"
+                              }`}
+                            >
+                              {variant.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-3">
+                          <div>
+                            <p className="text-xs text-[#64748B]">Price</p>
+                            <p className="font-medium text-[#0F172A]">
+                              {variant.price
+                                ? `₹${Number(variant.price).toLocaleString("en-IN")}`
+                                : "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-[#64748B]">Stock</p>
+                            <p className="font-medium text-[#0F172A]">
+                              {variant.stock || "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-[#64748B]">SKU</p>
+                            <p className="font-medium text-[#0F172A] truncate">
+                              {variant.sku || "—"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-[#64748B]">Images</p>
+                            <p className="font-medium text-[#0F172A]">
+                              {variant.imageCount}/{MAX_VARIANT_IMAGES}
+                            </p>
+                          </div>
+                        </div>
+
+                        {(variantImage[index] || []).length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {variantImage[index].map((file, imgIndex) => (
+                              <div
+                                key={imgIndex}
+                                className="w-12 h-12 rounded-lg overflow-hidden border border-[#E2E8F0] shrink-0"
+                              >
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  alt={`${variant.color || "Variant"} ${imgIndex + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* modal footer */}
+              <div className="flex items-center justify-end gap-3 px-5 sm:px-6 py-4 border-t border-[#E2E8F0] shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowPreview(false)}
+                  className="flex items-center gap-1.5 text-sm font-medium text-[#334155] hover:text-[#0F172A] px-4 py-2 rounded-lg hover:bg-[#F8FAFC] transition"
+                >
+                  <FiEdit2 className="w-4 h-4" />
+                  Back to edit
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition shadow-sm"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <FiLoader className="w-4 h-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheckCircle className="w-4 h-4" />
+                      Confirm &amp; list
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
