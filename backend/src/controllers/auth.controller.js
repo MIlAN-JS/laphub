@@ -7,7 +7,7 @@ import APIResponse from "../utility/apiResponse.js";
 import Seller from "../models/auth-models/seller.model.js";
 import jwt from "jsonwebtoken"
 import config from "../config/config.js";
-
+import Address from "../models/auth-models/address.model.js";
 
 
 
@@ -104,20 +104,29 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
     // check if user is registered 
     const userId = req.userId 
 
-    // check if user exists with this userId 
+    console.log(userId)
+
+
 
     const existingUser = await User.findById(userId)
+ 
+
+    
 
     if(!existingUser){
         const error = new APIError(401 , "user doesn't exist please register first ", "USER_NOT_FOUND")
         throw error
     }
 
+    console.log(existingUser)
+
+    const businessAddress = existingUser.addresses
+
     // destructure all the data that came from frontend  
 
-    const {storeName , storeNumber , businessType , businessAddress , panNumber } = req.body
-    const panImageLocalPath = req.file?.path
+    const {storeName , storeNumber , businessType , phoneNumber  , panNumber } = req.body
 
+    const panImageLocalPath = req.file?.path
 
     //upload pan image to cloudinary
 
@@ -131,8 +140,8 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
         storeName , 
         storeNumber , 
         businessType , 
-        businessAddress , 
-        panNumber , 
+        businessAddress ,
+        panNumber ,
         panImage : panImgUrl
     })
     
@@ -143,10 +152,10 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
         
     }
 
-    await seller.populate({
-    path: "user",
-    select: "-password -refreshToken -panImage -panId",
-        });
+    // await seller.populate({
+    // path: "user",
+    // select: "-password -refreshToken -panImage -panId",
+    //     });
 
 
     // for now normal isVerified true but later we will do admin verification
@@ -250,29 +259,46 @@ const refreshTokenController = asyncHandler(async(req , res , next)=>{
 })
 
 
-// getme controller 
 
-// const getMeController = asyncHandler(async(req , res , next)=>{
+// address setup controller 
 
-//     const userId = req.userId
+const setupUserAddressController = asyncHandler(async(req , res , next)=>{
 
-//     console.log(userId , "user id is ")
+    // check whether user exists or not 
 
-//     const user = await User.findById(userId).populate("addresses").select("-password -refreshToken -panImage -panId")
+    const userId = req.userId
 
-//     if(!user){
-//         throw new APIError(401 , "user not found " , "USER_NOT_FOUND")
-//     }
+    if(!userId){
+        throw new APIError(401 , "user not found " , "USER_NOT_FOUND")
+    }
 
-//     const accessToken = generateAccessToken(user._id);
-    
-//     res.status(200).json(new APIResponse(200 , {user , accessToken} , "user found successfully"))
-// })
+    const existingUser = await User.findById(userId)
 
+    if(!existingUser){
+        throw new APIError(401 , "user not found " , "USER_NOT_FOUND")
+    }
+
+    const {country , state, city , street , postalCode} = req.body
+
+    const address = await Address.create({
+        country , 
+        state , 
+        city , 
+        street , 
+        postalCode
+    })
+
+    await existingUser.addresses.push(address)
+    await existingUser.save()
+
+    return res.status(200).json(new APIResponse(200 , address , "address added successfully"))
+
+})
 export { 
     registerUserController, 
     loginUserController, 
     registerSellerController, 
     refreshTokenController, 
+    setupUserAddressController
    
 }

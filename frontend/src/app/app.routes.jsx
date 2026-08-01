@@ -5,6 +5,7 @@ import RegisterPage from "../features/auth/ui/pages/RegisterPage.jsx";
 import LoginPage from "../features/auth/ui/pages/LoginPage.jsx";
 import PublicLayout from "../layout/public.layout.jsx";
 import PrivateLayout from "../layout/private.layout.jsx";
+import CreateLaptopPage from "../features/laptop/ui/pages/CreateLaptopPage.jsx";
 
 
     export const router = createBrowserRouter([
@@ -19,6 +20,10 @@ import PrivateLayout from "../layout/private.layout.jsx";
                 index: true,
                 element: <h1>Home</h1>,
             },
+            {
+                path : "create-laptop",
+                element :<CreateLaptopPage/>
+            }
             ],
         },
         

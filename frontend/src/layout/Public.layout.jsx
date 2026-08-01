@@ -5,11 +5,11 @@ import { Outlet } from "react-router-dom";
 
 
 export default function PublicLayout() {
-  const { user, loading } = useSelector((state) => state.auth);
+  const { user, isLoading } = useSelector((state) => state.auth);
 
   console.log("inside public ")
 
-  if (loading) {
+  if (isLoading) {
     return <h1>Loading...</h1>;
   }
 

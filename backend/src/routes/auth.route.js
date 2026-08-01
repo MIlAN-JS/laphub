@@ -1,6 +1,6 @@
 import Router from "express";
 import { validateLoginUser, validateRegisterUser, validateSellerRegistration } from "../validators/auth.validator.js";
-import { loginUserController, registerSellerController, registerUserController } from "../controllers/auth.controller.js";
+import { loginUserController, registerSellerController, registerUserController, setupUserAddressController } from "../controllers/auth.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyUser from "../middlewares/auth.middleware.js";
 import { refreshTokenController } from "../controllers/auth.controller.js";
@@ -28,7 +28,13 @@ authRouter.post("/login", validateLoginUser , loginUserController )
  * @description register a user as a seller 
  * @access private
  */
-authRouter.post("/register-seller",verifyUser ,validateSellerRegistration , upload.single("panImage"),registerSellerController )
+authRouter.post(
+    "/register-seller",
+      verifyUser ,
+      upload.single("panImage"),
+      validateSellerRegistration ,
+      registerSellerController 
+    )
 
 
 /**
@@ -41,11 +47,13 @@ authRouter.post("/refresh-token" , refreshTokenController )
 
 
 /**
- * @route /api/v1/auth/get-me
- * @description get logged in user 
- * @access 
+ * @route /api/v1/auth/setup-address
+ * @description setup user profile (address ... )
+ * @access private 
  */
-// authRouter.get("/get-me" ,verifyUser,  getMeController)
+
+authRouter.post("/setup-address", verifyUser , setupUserAddressController)
+
 
 
 

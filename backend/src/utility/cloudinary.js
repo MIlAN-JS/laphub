@@ -17,7 +17,6 @@ const uploadOnCloudinary = async(localFilePath)=>{
 
         const uploadResult = await cloudinary.uploader
        .upload(localFilePath ,  {
-               public_id: 'avatar',
                resource_type : "auto"
            }
        )
@@ -38,7 +37,6 @@ const uploadOnCloudinary = async(localFilePath)=>{
         fs.unlinkSync(localFilePath) // remove the locally saved temporary file as the upload operation got failed
 
         throw new Error (error)
-        return null ; 
         
     }
 }

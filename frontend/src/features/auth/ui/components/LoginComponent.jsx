@@ -16,7 +16,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 // Adjust this import path to wherever your custom hook lives
 import useAuth from "../../hook/useAuth.js"
-
+import Loader from "../../../../components/Loader.jsx";
 // Same rules as the register form's email check, kept local so this
 // component doesn't depend on the register file.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,6 +74,9 @@ export default function LoginComponent() {
 
     handleLogin(formData);
   };
+
+
+  if(isLoading) return <Loader/>
 
   return (
     <div className="min-h-screen w-full flex bg-[#F8FAFC]">

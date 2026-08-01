@@ -9,8 +9,9 @@ import config from "../config/config.js"
 
       const accessToken = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
 
-    console.log(accessToken , "access token i s")
 
+
+    
       if(!accessToken){
         throw new APIError(401, "token required " , "USER_NOT_FOUND")
       }
@@ -22,5 +23,11 @@ import config from "../config/config.js"
       next()
 
   })
+
+
+  const parseData = (req , res , next)=>{
+    req.body = JSON.parse(req.body)
+    next()
+  }
 
 export default verifyUser

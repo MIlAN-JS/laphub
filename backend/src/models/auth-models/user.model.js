@@ -30,12 +30,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     }, 
-
     contact : {
         type: String, 
 
     },
-
     avatar : {
         type : String 
     } , 
@@ -43,6 +41,7 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Address",
   }],  
+  
 
     refreshToken : {
         type : String, 

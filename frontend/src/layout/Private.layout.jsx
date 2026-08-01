@@ -1,17 +1,20 @@
 
-    import { Navigate, Outlet } from "react-router-dom";
-import { useSelector } from "react-redux";
+      import { Navigate, Outlet } from "react-router-dom";
+  import { useSelector } from "react-redux";
 
-export default function PrivateLayout() {
-  const { user, loading } = useSelector((state) => state.auth);
+  export default function PrivateLayout() {
+    
+    const { user, isLoading, error } = useSelector((state) => state.auth);
 
-  if (loading) {
-    return <h1>Loading...</h1>;
+    if (isLoading) {
+      return <h1>Loading...</h1>;
+    }
+
+
+
+    if (!user) {
+      return <Navigate to="/login" replace />;
+    }
+
+    return <Outlet />;
   }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <Outlet />;
-}
