@@ -113,8 +113,48 @@ const createLaptopProductController = asyncHandler(async(req , res , next)=>{
    
 })
 
+const getSellerLaptopsController = asyncHandler(async(req , res , next)=>{
+// get userID
+    const userId = req.userId
+
+
+    // check if user is registered as a seller
+    const existingSeller = await Seller.findOne({ user : userId})
+
+    if(!existingSeller){
+        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
+        throw error
+    }
+
+   
+
+    const laptops = await laptopModel.aggregate([
+        {
+            $match : {
+                seller : existingSeller._id
+            }
+        }, 
+
+        {
+            $lookup: {
+                from : "laptopvariants",
+                localField : "_id", 
+                foreignField : "product", 
+                as : "variants"
+            }
+        }
+    ])
+
+    console.log(laptops)
+
+    res.status(200).json(new APIResponse(200 , laptops , "laptops fetched successfully"))
+
+
+})
+
 
 
 export {
-    createLaptopProductController
+    createLaptopProductController, 
+    getSellerLaptopsController
 }
