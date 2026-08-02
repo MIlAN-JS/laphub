@@ -1,6 +1,6 @@
 import {Router} from "express"
 import verifyUser from "../middlewares/auth.middleware.js"
-import { createLaptopProductController, deleteLaptopController, deleteLaptopVariantController, getAllLaptopsController, getSellerLaptopsController, updateLaptopController } from "../controllers/laptop.controller.js"
+import { createLaptopProductController, deleteLaptopController, deleteLaptopVariantController, getAllLaptopsController, getSellerLaptopsController, updateLaptopController, updateVariantController } from "../controllers/laptop.controller.js"
 import { validateCreateProduct, validateProductVariant } from "../validators/laptop.validator.js"
 import { upload } from "../middlewares/multer.middleware.js"
 
@@ -65,6 +65,20 @@ laptopRouter.delete("/delete-variant/:variantId", verifyUser ,deleteLaptopVarian
  * @access private & seller only
  */
 
-laptopRouter.patch("/update-product/:laptopId", verifyUser, upload.single("thumbnail") , updateLaptopController )
+laptopRouter.patch("/update-laptop/:laptopId", verifyUser, upload.single("thumbnail") , updateLaptopController )
+
+/**
+ * @route /api/v1/laptops/:laptopId/variants/:variantId
+ * @description 
+ * @access 
+ */
+
+laptopRouter.patch("/update-variant/:laptopId/variants/:variantId" ,
+         verifyUser ,
+         upload.fields([
+        {name : "variantImage" , maxCount : 5}
+]) , updateVariantController)
+
+
 
 export default laptopRouter

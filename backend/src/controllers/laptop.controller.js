@@ -385,56 +385,80 @@ const updatedLaptop = await laptopModel.findByIdAndUpdate(laptopId , changedProd
 
 
 const updateVariantController = asyncHandler(async(req , res , next)=>{
-  // updating variants if exists
-    const changedVariants = JSON.parse(req.body.variants)
-    const variantImages = req.files.variantImage
-    let updatedVariants ;
-    let fetchedImages = 0;
-
-    if(changedVariants && changedVariants.length > 0){
-
-    
-
-      updatedVariants = await Promise.all(
-        changedVariants.map(async(variant)=>{
-
-             const imageCount = variant.imageCount || 0
-            // fetch images only of relative variant using slice method
-            const variantImgs = variantImages.slice(fetchedImages, imageCount + fetchedImages);
-            fetchedImages = fetchedImages + imageCount;
-            
-            // upload all the fetched image of the variant to cloudinary
-            const variantImagesUrls = await Promise.all(variantImgs.map(async(variantImg)=>{
-                return await uploadOnCloudinary(variantImg.path)
-            }))
-
-
-            // update the variant in the database
-
-            const updatedVariant = await LaptopVariant.findOneAndUpdate({
-                product : laptopId,
-                status : "active",
-            }, {
-                $set : {
-                ...variant,
-                ...(variantImagesUrls.length > 0 && {
-                    images: variantImagesUrls
-                }) 
-                }
-            })
 
 
 
+    const userId= req.userId
 
-            
-            
-            
-           
-        
-        })
-      )
+    // check if user is registered as a seller
+    const existingSeller = await Seller.findOne({ user : userId})
 
+    if(!existingSeller){
+        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
+        throw error
     }
+
+    const variantId = req.params.variantId
+    const laptopId = req.params.laptopId
+
+
+    console.log("variantId", variantId)
+    console.log("pid", laptopId)
+    // check if this variant belongs to a seller 
+
+   const variant = await LaptopVariant.findOne({
+    _id : variantId,
+    product : laptopId,
+    status : "active"
+   })
+
+   if(!variant){
+    const error = new APIError(404 , "variant not found" , "VARIANT_NOT_FOUND")
+    throw error
+   }
+
+  // updaing variants if exists
+   const changedVariantData = req.body
+
+       const changedVariants = {};
+
+       Object.keys(changedVariantData).forEach((key)=>{
+            if(changedVariantData[key] !== undefined){
+                changedVariants[key] = changedVariantData[key];
+            }
+        });
+
+
+const variantImages = req.files?.variantImage || [];
+
+const variantImagesUrls = await Promise.all(
+    variantImages.map(file =>
+        uploadOnCloudinary(file.path)
+    )
+);
+
+
+const updatedVariant = await LaptopVariant.findOneAndUpdate(
+    {
+        _id: variantId,
+        product: laptopId,
+        status:"active"
+    },
+    {
+        $set:{
+            ...changedVariants,
+            ...(variantImagesUrls.length > 0 && {
+                images: variantImagesUrls
+            })
+        }
+    },
+    {
+        new:true
+    }
+);
+
+
+    res.status(200).json(new APIResponse(200 , {variants : updatedVariant} , "variant updated successfully"))
 })
 
 
@@ -444,5 +468,6 @@ export {
     getAllLaptopsController,
     deleteLaptopController ,
     deleteLaptopVariantController,
-    updateLaptopController
+    updateLaptopController, 
+    updateVariantController
 }
