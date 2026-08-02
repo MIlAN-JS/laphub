@@ -6,6 +6,8 @@ import asyncHandler from "../utility/asyncHandler.js";
 import APIError from "../utility/apiError.js";
 import Seller from "../models/auth-models/seller.model.js";
 
+
+
 const createLaptopProductController = asyncHandler(async(req , res , next)=>{
 
     // check if user is registered as a seller
@@ -151,6 +153,49 @@ const getSellerLaptopsController = asyncHandler(async(req , res , next)=>{
 
 
 })
+
+
+const getLaptopByIdController = asyncHandler(async(req , res , next)=>{
+
+    const {laptopId} = req.params
+    const userId = req.userId
+    // seller exists ? 
+    const existingSeller = await Seller.findOne({ user : userId})
+
+    if(!existingSeller){
+        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
+        throw error
+    }
+
+    const laptop = await laptopModel.aggregate([
+        {
+            $match : {
+                _id : existingSeller._id
+            }
+        } , 
+
+        {
+            $lookup : {
+                from : "laptopvariants", 
+                localField : "_id",
+                foreignField : "product", 
+                as : "variants"
+            }
+        }
+    ]) 
+
+    if(!laptop){
+        const error = new APIError(404 , "laptop not found" , "LAPTOP_NOT_FOUND")
+        throw error
+    }
+
+    res.status(200).json(new APIResponse(200 , laptop , "laptop fetched successfully"))
+
+})
+
+
+
+
 
 
 

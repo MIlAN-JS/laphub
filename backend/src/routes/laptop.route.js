@@ -28,4 +28,12 @@ laptopRouter.post("/create", verifyUser ,upload.fields([
 laptopRouter.get("/get-seller-laptops", verifyUser ,getSellerLaptopsController)
 
 
+/**
+ * @route /api/v1/laptop/get-laptop/:laptopId
+ * @description get single laptop details by laptopId
+ * @access private
+ */
+laptopRouter.get("/get-laptop/:laptopId", verifyUser ,getSellerLaptopsController)
+ 
+
 export default laptopRouter
