@@ -1,6 +1,6 @@
 import {Router} from "express"
 import verifyUser from "../middlewares/auth.middleware.js"
-import { createLaptopProductController, getSellerLaptopsController } from "../controllers/laptop.controller.js"
+import { createLaptopProductController, getAllLaptopsController, getSellerLaptopsController } from "../controllers/laptop.controller.js"
 import { validateCreateProduct, validateProductVariant } from "../validators/laptop.validator.js"
 import { upload } from "../middlewares/multer.middleware.js"
 
@@ -35,5 +35,12 @@ laptopRouter.get("/get-seller-laptops", verifyUser ,getSellerLaptopsController)
  */
 laptopRouter.get("/get-laptop/:laptopId", verifyUser ,getSellerLaptopsController)
  
+
+/**
+ * @route /api/v1/get-all-laptop?page=1&limit=20
+ * @description get all the laptops to show in homepage 
+ * @access private
+ */
+laptopRouter.get("/get-all-laptop", verifyUser , getAllLaptopsController)
 
 export default laptopRouter
