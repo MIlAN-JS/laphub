@@ -210,6 +210,45 @@ const getAllLaptopsController = asyncHandler(async(req , res , next)=>{
 })
 
 
+const deleteLaptopController = asyncHandler(async(req , res , next)=>{
+    // get userId
+    const userId = req.userId
+
+    // check if user is registered as a seller
+    const existingSeller = await Seller.findOne({ user : userId})
+    
+    if(!existingSeller){
+        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
+        throw error
+    }
+
+    const {laptopId} = req.params
+
+    const laptop = await laptopModel.findById(laptopId)
+
+    if(!laptop){
+        const error = new APIError(404 , "laptop not found" , "LAPTOP_NOT_FOUND")
+        throw error
+    }
+
+    // check if the laptop belongs to the seller
+        
+    laptop.status = "archived"
+    await laptop.save()  
+
+
+  // update all the variants of the laptop to archived
+    await LaptopVariant.updateMany({product : laptopId} , {status : "archived"})
+ 
+    
+    res.status(200).json(new APIResponse(200 , null , "laptop deleted successfully"))
+    
+
+
+
+     
+})
+
 
 
 
@@ -218,5 +257,6 @@ const getAllLaptopsController = asyncHandler(async(req , res , next)=>{
 export {
     createLaptopProductController, 
     getSellerLaptopsController, 
-    getAllLaptopsController
+    getAllLaptopsController,
+    deleteLaptopController
 }
