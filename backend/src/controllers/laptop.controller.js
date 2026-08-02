@@ -133,7 +133,8 @@ const getSellerLaptopsController = asyncHandler(async(req , res , next)=>{
     const laptops = await laptopModel.aggregate([
         {
             $match : {
-                seller : existingSeller._id
+                seller : existingSeller._id, 
+                status : "active"
             }
         }, 
 
@@ -170,7 +171,8 @@ const getLaptopByIdController = asyncHandler(async(req , res , next)=>{
     const laptop = await laptopModel.aggregate([
         {
             $match : {
-                _id : existingSeller._id
+                _id : existingSeller._id, 
+                status : "active"
             }
         } , 
 
@@ -199,7 +201,7 @@ const getAllLaptopsController = asyncHandler(async(req , res , next)=>{
     const {page =1, limit = 20} = req.query
     const skip = (page - 1) * limit
 
-    const laptops = await laptopModel.find().skip(skip).limit(limit).populate("seller")
+    const laptops = await laptopModel.find({status : "active"}).skip(skip).limit(limit).populate("seller")
 
 
     res.status(200).json(new APIResponse(200 , laptops , "laptops fetched successfully"))
