@@ -306,6 +306,136 @@ const deleteLaptopController = asyncHandler(async(req , res , next)=>{
 
 
 
+const updateLaptopController = asyncHandler(async(req , res , next)=>{
+
+    // check if user is registered as a seller
+
+    const userId = req.userId
+
+    const existingSeller = await Seller.findOne({ user : userId})
+
+    if(!existingSeller){
+        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
+        throw error
+    }
+
+    
+    const {laptopId} = req.params
+
+
+    // find the laptop by id and seller id
+
+    const laptop = await laptopModel.findOne({
+        _id : laptopId,
+        seller : existingSeller._id,
+        status : "active"
+    })
+
+    if(!laptop){
+        const error = new APIError(404 , "laptop not found" , "LAPTOP_NOT_FOUND")
+        throw error
+    }
+
+    //get updating data from req.body and filtering it
+
+    const changedProduct = {}
+
+    Object.keys(req.body).forEach((key)=>{
+    if(req.body[key] !== undefined){
+        changedProduct[key] = req.body[key];
+    }
+  });
+    
+
+    // upload thumbnail to cloudinary if exists
+    const thumbnailPath = req.file?.path
+
+    if(thumbnailPath){
+
+      let thumbnailUrl = await uploadOnCloudinary(thumbnailPath)
+
+        if(!thumbnailUrl){
+            const error = new APIError(500 , "thumbnail upload failed" , "THUMBNAIL_UPLOAD_FAILED")
+            throw error
+        }
+
+        laptop.thumbnail = thumbnailUrl
+       await laptop.save()
+
+    }
+
+
+const updatedLaptop = await laptopModel.findByIdAndUpdate(laptopId , changedProduct, {new : true})
+
+
+
+
+
+    res.status(200).json(new APIResponse(200 , {product : updatedLaptop} , "laptop updated successfully"))
+
+
+
+
+
+
+
+
+
+})
+
+
+const updateVariantController = asyncHandler(async(req , res , next)=>{
+  // updating variants if exists
+    const changedVariants = JSON.parse(req.body.variants)
+    const variantImages = req.files.variantImage
+    let updatedVariants ;
+    let fetchedImages = 0;
+
+    if(changedVariants && changedVariants.length > 0){
+
+    
+
+      updatedVariants = await Promise.all(
+        changedVariants.map(async(variant)=>{
+
+             const imageCount = variant.imageCount || 0
+            // fetch images only of relative variant using slice method
+            const variantImgs = variantImages.slice(fetchedImages, imageCount + fetchedImages);
+            fetchedImages = fetchedImages + imageCount;
+            
+            // upload all the fetched image of the variant to cloudinary
+            const variantImagesUrls = await Promise.all(variantImgs.map(async(variantImg)=>{
+                return await uploadOnCloudinary(variantImg.path)
+            }))
+
+
+            // update the variant in the database
+
+            const updatedVariant = await LaptopVariant.findOneAndUpdate({
+                product : laptopId,
+                status : "active",
+            }, {
+                $set : {
+                ...variant,
+                ...(variantImagesUrls.length > 0 && {
+                    images: variantImagesUrls
+                }) 
+                }
+            })
+
+
+
+
+            
+            
+            
+           
+        
+        })
+      )
+
+    }
+})
 
 
 export {
@@ -314,4 +444,5 @@ export {
     getAllLaptopsController,
     deleteLaptopController ,
     deleteLaptopVariantController,
+    updateLaptopController
 }
