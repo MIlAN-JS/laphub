@@ -253,6 +253,58 @@ const deleteLaptopController = asyncHandler(async(req , res , next)=>{
 
 
 
+ const deleteLaptopVariantController = asyncHandler(async(req , res , next)=>{
+
+            const userId = req.userId
+
+            // check if user is registered as a seller
+            const existingSeller = await Seller.findOne({ user : userId})
+
+            
+            if(!existingSeller){
+                const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
+                throw error
+            }
+
+            
+            const {variantId} = req.params
+
+            const variant = await LaptopVariant.findOne({
+                _id : variantId ,
+                status : "active",            
+                })
+
+                console.log(variant)
+            
+            if(!variant){
+                const error = new APIError(404 , "variant not found" , "VARIANT_NOT_FOUND")
+                throw error
+            }
+
+            // check if the variant belongs to the seller
+
+            const laptop = await laptopModel.find({
+                _id : variant.product,
+                seller : existingSeller._id,
+                status : "active"
+            })
+
+
+            if (!laptop){
+                const error = new APIError(403 , "variant does not belong to the seller" , "FORBIDDEN_ACCESS")
+                throw error
+            }
+        
+                
+            variant.status = "archived"
+            await variant.save()
+
+            res.status(200).json(new APIResponse(200 , null , "variant deleted successfully"))
+
+
+        })
+
+
 
 
 
@@ -260,5 +312,6 @@ export {
     createLaptopProductController, 
     getSellerLaptopsController, 
     getAllLaptopsController,
-    deleteLaptopController
+    deleteLaptopController ,
+    deleteLaptopVariantController,
 }

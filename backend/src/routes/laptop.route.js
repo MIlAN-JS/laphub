@@ -1,6 +1,6 @@
 import {Router} from "express"
 import verifyUser from "../middlewares/auth.middleware.js"
-import { createLaptopProductController, deleteLaptopController, getAllLaptopsController, getSellerLaptopsController } from "../controllers/laptop.controller.js"
+import { createLaptopProductController, deleteLaptopController, deleteLaptopVariantController, getAllLaptopsController, getSellerLaptopsController } from "../controllers/laptop.controller.js"
 import { validateCreateProduct, validateProductVariant } from "../validators/laptop.validator.js"
 import { upload } from "../middlewares/multer.middleware.js"
 
@@ -50,5 +50,12 @@ laptopRouter.get("/get-all-laptop", verifyUser , getAllLaptopsController)
  */
 laptopRouter.delete("/delete/:laptopId", verifyUser ,deleteLaptopController )
 
+
+/**
+ * @route /api/v1/delete-variant/:variantId
+ * @description delete a single variant of a laptop
+ * @access private
+ */
+laptopRouter.delete("/delete-variant/:variantId", verifyUser ,deleteLaptopVariantController )
 
 export default laptopRouter
