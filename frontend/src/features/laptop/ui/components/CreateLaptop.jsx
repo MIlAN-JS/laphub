@@ -20,7 +20,9 @@ import {
   FiEye,
   FiEdit2,
   FiCheckCircle,
+  FiArrowLeft,
 } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 const MAX_VARIANT_IMAGES = 5;
 
@@ -196,6 +198,16 @@ export default function CreatelaptopComponent() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
+
+         {/* Back */}
+        <Link
+          type="button"
+          to={"/dashboard"}
+          className="flex items-center gap-1.5 text-sm font-medium text-[#64748B] hover:text-[#0F172A] mb-4 transition"
+        >
+          <FiArrowLeft className="w-4 h-4" />
+          Back
+        </Link>
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-[#2563EB] flex items-center justify-center shrink-0">

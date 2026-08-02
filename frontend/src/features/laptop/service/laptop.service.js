@@ -28,8 +28,22 @@ const formData = new FormData();
     return response.data.product
 
 
- }
+  }
 
+
+
+  const getSellerLaptops = async()=>{
+    const response = await api.get("/laptop/get-seller-laptops");
+    return response.data
+  }
+
+
+  const getLaptopDetail = async(laptopId)=>{
+    const response = await api.get(`/laptop/get-laptop/${laptopId}`);
+    return response.data
+  }
  export {
-   createLaptopProductService
+   createLaptopProductService, 
+   getSellerLaptops, 
+   getLaptopDetail
  }

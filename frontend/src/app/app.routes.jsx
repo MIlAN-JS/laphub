@@ -6,6 +6,8 @@ import LoginPage from "../features/auth/ui/pages/LoginPage.jsx";
 import PublicLayout from "../layout/public.layout.jsx";
 import PrivateLayout from "../layout/private.layout.jsx";
 import CreateLaptopPage from "../features/laptop/ui/pages/CreateLaptopPage.jsx";
+import Dashboard from "../features/laptop/ui/pages/Dashboard.jsx";
+import LaptopDetails from "../features/laptop/ui/components/LaptopDetails.jsx";
 
 
     export const router = createBrowserRouter([
@@ -23,6 +25,14 @@ import CreateLaptopPage from "../features/laptop/ui/pages/CreateLaptopPage.jsx";
             {
                 path : "create-laptop",
                 element :<CreateLaptopPage/>
+            }, 
+            {
+                path : "dashboard",
+                element :<Dashboard/>
+            }, 
+            {
+                path : "laptop/view/:productId",
+                element :<LaptopDetails/>
             }
             ],
         },
