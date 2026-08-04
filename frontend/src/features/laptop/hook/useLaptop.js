@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux"
-import { laptopStart, laptopFailure, laptopSuccess, clearError } from "../context/laptop.slice.js"
-import { createLaptopProductService , getSellerLaptops , getLaptopDetail} from "../service/laptop.service.js"
+import { laptopStart, laptopFailure, laptopSuccess, clearError, laptopSuccessSeller } from "../context/laptop.slice.js"
+import { createLaptopProductService , getSellerLaptops , getLaptopDetail, getAllLaptopsService} from "../service/laptop.service.js"
 import { useNavigate } from "react-router-dom"
 const useLaptop = () => {
 
@@ -32,7 +32,7 @@ const useLaptop = () => {
             dispatch(laptopStart())
             const response = await getSellerLaptops();
             console.log(response , "laptopdata")
-            dispatch(laptopSuccess(response.data))
+            dispatch(laptopSuccessSeller(response.data))
             dispatch(clearError())
             
         } catch (error) {
@@ -64,10 +64,32 @@ const useLaptop = () => {
             
         }
 
+    const handleGetAllLaptops = async({page , limit})=>{
+        try {
+
+            dispatch(laptopStart())
+            const response = await getAllLaptopsService({page , limit});
+            console.log(response)
+            dispatch(laptopSuccess(response.data))
+            dispatch(clearError())
+            
+        } catch (error) {
+            const message = 
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong";
+      console.log(error)
+            dispatch(laptopFailure(message))
+            dispatch(clearError())
+            
+        }
+    }
+
     return {
         handleCreateLaptop, 
         handleGetSellerLaptops, 
-        handleGetLaptopDetail
+        handleGetLaptopDetail, 
+        handleGetAllLaptops
     }
 
 }

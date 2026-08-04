@@ -42,8 +42,14 @@ const formData = new FormData();
     const response = await api.get(`/laptop/get-laptop/${laptopId}`);
     return response.data
   }
+
+  const getAllLaptopsService = async({page , limit})=>{
+    const response = await api.get(`/laptop/get-all-laptop?page=${page}&limit=${limit}`);
+    return response.data
+  }
  export {
    createLaptopProductService, 
    getSellerLaptops, 
-   getLaptopDetail
+   getLaptopDetail, 
+   getAllLaptopsService
  }

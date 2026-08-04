@@ -4,6 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
     laptopData : [],
+    sellerLaptops : [],
     variantData : {}, 
     isLoading : false,
     error : null
@@ -18,6 +19,12 @@ const laptopSlice = createSlice({
             state.isLoading = true
             state.error = null
         },
+        laptopSuccessSeller : (state , action)=>{
+            state.sellerLaptops = action.payload
+            state.isLoading = false
+            state.error = null
+        },
+
         laptopSuccess : (state , action)=>{
             state.laptopData = action.payload
             state.isLoading = false
@@ -38,5 +45,5 @@ const laptopSlice = createSlice({
 
 
 
-export const {laptopStart , laptopSuccess , laptopFailure , clearError} = laptopSlice.actions
+export const {laptopStart , laptopSuccess ,laptopSuccessSeller,  laptopFailure , clearError} = laptopSlice.actions
 export default laptopSlice.reducer
