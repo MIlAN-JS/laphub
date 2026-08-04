@@ -22,10 +22,11 @@ app.use(cookieParser());
 // routes 
 import authRouter from "./routes/auth.route.js";
 import laptopRouter from "./routes/laptop.route.js";
+import cartRouter from "./routes/cart.route.js";
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/laptop", laptopRouter);
-
+app.use("/api/v1/cart", cartRouter)
 
 
 

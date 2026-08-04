@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import priceSchema from "./price.schema.js";
 
 
 const laptopVariantSchema = new mongoose.Schema(
@@ -27,11 +28,10 @@ const laptopVariantSchema = new mongoose.Schema(
       trim: true,
     },
 
-    price: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
+   price : {
+    type : priceSchema, 
+    required : true
+   },
 
     compareAtPrice: {
       type: Number,
