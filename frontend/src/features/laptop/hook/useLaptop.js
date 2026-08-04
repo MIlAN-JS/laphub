@@ -64,7 +64,7 @@ const useLaptop = () => {
             
         }
 
-    const handleGetAllLaptops = async({page , limit})=>{
+    const handleGetLaptops = async({page , limit})=>{
         try {
 
             dispatch(laptopStart())
@@ -89,7 +89,7 @@ const useLaptop = () => {
         handleCreateLaptop, 
         handleGetSellerLaptops, 
         handleGetLaptopDetail, 
-        handleGetAllLaptops
+        handleGetLaptops
     }
 
 }

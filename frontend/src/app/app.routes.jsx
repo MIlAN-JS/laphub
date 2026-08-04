@@ -8,6 +8,7 @@ import PrivateLayout from "../layout/private.layout.jsx";
 import CreateLaptopPage from "../features/laptop/ui/pages/CreateLaptopPage.jsx";
 import Dashboard from "../features/laptop/ui/pages/Dashboard.jsx";
 import LaptopDetails from "../features/laptop/ui/components/LaptopDetails.jsx";
+import HomePage from "../features/laptop/ui/pages/HomePage.jsx";
 
 
     export const router = createBrowserRouter([
@@ -20,7 +21,7 @@ import LaptopDetails from "../features/laptop/ui/components/LaptopDetails.jsx";
             children: [
             {
                 index: true,
-                element: <h1>Home</h1>,
+                element: <HomePage/>,
             },
             {
                 path : "create-laptop",
