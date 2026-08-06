@@ -47,6 +47,7 @@ export default function Home() {
     (state) => state.laptop
   );
 
+
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export default function Home() {
               {laptops.map((laptop) => (
                 <div
                   key={laptop._id}
-                  onClick={() => navigate(`/laptop/view/${laptop._id}`)}
+                  onClick={() => navigate(`/laptop/detail/${laptop._id}`)}
                   className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-[#2563EB]/40 transition group cursor-pointer"
                 >
                   <div className="aspect-square bg-[#F8FAFC] overflow-hidden">

@@ -1,9 +1,10 @@
 
       import { Navigate, Outlet } from "react-router-dom";
   import { useSelector } from "react-redux";
+  import Navbar from "../components/Navbar.jsx";
 
   export default function PrivateLayout() {
-    
+
     const { user, isLoading, error } = useSelector((state) => state.auth);
 
     if (isLoading) {
@@ -16,5 +17,10 @@
       return <Navigate to="/login" replace />;
     }
 
-    return <Outlet />;
+    return (
+      <>
+        <Navbar />
+        <Outlet />
+      </>
+    );
   }

@@ -9,6 +9,7 @@ import CreateLaptopPage from "../features/laptop/ui/pages/CreateLaptopPage.jsx";
 import Dashboard from "../features/laptop/ui/pages/Dashboard.jsx";
 import LaptopDetails from "../features/laptop/ui/components/LaptopDetails.jsx";
 import HomePage from "../features/laptop/ui/pages/HomePage.jsx";
+import LaptopDetailPage from "../features/laptop/ui/pages/laptopDetailPage.jsx";
 
 
     export const router = createBrowserRouter([
@@ -22,6 +23,10 @@ import HomePage from "../features/laptop/ui/pages/HomePage.jsx";
             {
                 index: true,
                 element: <HomePage/>,
+            },
+            {
+                path : "laptop/detail/:productId",
+                element : <LaptopDetailPage/>
             },
             {
                 path : "create-laptop",
