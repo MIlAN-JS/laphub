@@ -23,7 +23,7 @@ const createLaptopProductController = asyncHandler(async(req , res , next)=>{
     }
 
 
-    const {title , description, brand, battery, display } = req.body
+    const {title , description, brand, battery, display , categoryId } = req.body
 
     const variants = JSON.parse(req.body.variants)
 
@@ -43,10 +43,17 @@ const createLaptopProductController = asyncHandler(async(req , res , next)=>{
 
     const thumbnailUrl = await uploadOnCloudinary(thumbnailPath)
 
-    // creating a new product 
+    // getting categoryId 
+
+
+
+
+
+
 
     const newProduct = await laptopModel.create({
-        title , description , brand , battery , display , thumbnail : thumbnailUrl , seller : existingSeller._id
+        title , description , brand , battery , display , thumbnail : thumbnailUrl , seller : existingSeller._id, 
+        category : categoryId
     })
 
     
@@ -122,7 +129,7 @@ const getSellerLaptopsController = asyncHandler(async(req , res , next)=>{
 
 
     // check if user is registered as a seller
-    const existingSeller = await Seller.findOne({ user : userId})
+    const existingSeller = await Seller.findById(userId)    
 
     if(!existingSeller){
         const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")

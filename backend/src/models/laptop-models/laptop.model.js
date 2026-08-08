@@ -40,7 +40,10 @@ const laptopSchema = new mongoose.Schema({
     enum: ["active", "draft", "archived"],
     default: "draft"
 }, 
-// category
+ category : {
+    type : mongoose.Schema.Types.ObjectId,
+    ref : "Category",
+}
 
 
 

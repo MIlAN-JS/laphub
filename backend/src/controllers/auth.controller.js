@@ -306,6 +306,8 @@ const loginUserController = async(req , res , next)=>{
         throw new APIError(401 , "user not found" , "USER_NOT_FOUND")
     }
 
+    console.log(user , "user data while login is")
+
     // check if password is correct
 
     const isPasswordCorrect = await user.comparePassword(password) 

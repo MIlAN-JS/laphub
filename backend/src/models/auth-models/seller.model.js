@@ -94,9 +94,6 @@ const sellerSchema = new mongoose.Schema(
   }
 );
 
-const Seller =  mongoose.model("Seller", sellerSchema);
-
-
 sellerSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
@@ -109,4 +106,7 @@ sellerSchema.pre("save", async function () {
     return await bcrypt.compare(password, this.password);
     };
 
-export default Seller; 
+
+const Seller =  mongoose.model("Seller", sellerSchema);
+
+export default Seller;
