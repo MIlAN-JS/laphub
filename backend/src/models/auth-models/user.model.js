@@ -44,6 +44,10 @@ export const userSchema = new mongoose.Schema({
     },
     refreshToken : {
         type : String, 
+    }, 
+    provider : {
+        type : String, 
+        enum : ["google", "facebook"]
     }
    
 

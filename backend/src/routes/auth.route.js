@@ -1,10 +1,11 @@
 import Router from "express";
 import { validateLoginUser, validateRegisterUser, validateSellerRegistration } from "../validators/auth.validator.js";
-import { compareVerificationCodeController, loginUserController, registerBuyerController, registerSellerController, resendVerificationCodeController, setupUserAddressController } from "../controllers/auth.controller.js";
+import { compareVerificationCodeController, loginUserController, registerBuyerController, registerSellerController, resendVerificationCodeController, setupUserAddressController , googleCallbackController, facebookCallbackController } from "../controllers/auth.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyUser from "../middlewares/auth.middleware.js";
 import { refreshTokenController } from "../controllers/auth.controller.js";
 import User from "../models/auth-models/user.model.js";
+import passport from "../config/passport.config.js"
 
 const authRouter = Router();
 
@@ -70,5 +71,36 @@ authRouter.post("/resend-verification-code" , resendVerificationCodeController)
  * @access public
  */
 authRouter.post("/verify-code" , compareVerificationCodeController)
+
+
+// GOOGLE OAUTH ROUTES
+authRouter.get("/google",
+    passport.authenticate("google", { scope: [ "profile", "email" ] })
+);
+/**
+ * @route api/auth/google/callback
+ * @description  google callback route for authentication
+ * @access  public
+ */
+authRouter.get('/google/callback',passport.authenticate("google",{
+    session: false,
+    failureRedirect: '/'
+}), googleCallbackController)
+
+
+//FACEBOOK OAUTH ROUTES
+
+authRouter.get("/facebook",
+    passport.authenticate("facebook", { scope: [ "email" ] })
+);
+
+
+authRouter.get('/facebook/callback',passport.authenticate("facebook",{
+    session: false,
+    failureRedirect: '/'
+}), facebookCallbackController)
+
+
+
 
 export default authRouter;

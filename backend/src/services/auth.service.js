@@ -21,48 +21,49 @@ import jwt from "jsonwebtoken"
 
 }
 
-const registerUserService = async(userData)=>{
-    try {
+ const findOrCreateUser = async (userData, provider) => {
 
-        if(!userData.email || !userData.password || !userData.fullName || !userData.contact){
-            throw new Error("All fields are required")
-        }
+    const { id, displayName, name, emails, photos } = userData;
 
-       const existingUser = await User.findOne({
-        $or : [
-            {email : userData.email},
-            {contact : userData.contact}
-        ]
-       });
+    console.log(userData,provider)
+  
+    const email = emails?.[0]?.value;
 
-       if(existingUser){
-        throw new Error("User already exists")
-       }
+    const userName = name
+      ? `${name.givenName || ''} ${name.familyName || ''}`.trim()
+      : displayName;
 
-       const newUser = await User.create({
-           email : userData.email,
-           password : userData.password,
-           fullName : userData.fullName,
-           contact : userData.contact ,
-           role : userData.isSeller ? "seller" : "buyer"
 
-       });
+  
+    const query = [
+      { googleId: id },
+      { facebookId: id },
+    ]
 
-       const accessToken = generateAccessToken(newUser._id);
-       const refreshToken = generateRefreshToken(newUser._id);
+    if (email) query.push({ email })
 
-       
-       return {
-        newUser , accessToken , refreshToken
-       }
+    const user = await User.findOne({ $or: query })
+    if (user) return user
+
+    // create new user
+    const newUser = await User.create({
+      username : userName
+    ? `${name.givenName || ''} ${name.familyName || ''}`.trim()
+    : displayName,
+
+    //   avatar:{
+    //     url : photos?.[0]?.value,
+    //     fileId : null
+    //   } ,
+      ...(email && { email }),
+      ...(provider === 'google' && { googleId: id , provider : 'google' }), // haha it works like when provider is google then only googleId field will be added to the user document and when provider is github then only githubId field will be added to the user document because ...true will add the object here and ...false will not add the object here
+      ...(provider === 'facebook' && { facebookId: id , provider : 'facebook' }),
+isVerified : true
+    })
     
-        
-    } catch (error) {
 
-        throw new Error(error.message)
-        
-    }
-}
+    return newUser
+  }
 
 
 
@@ -71,7 +72,8 @@ const registerUserService = async(userData)=>{
 
 
 export { 
-    registerUserService , 
+  
 generateAccessToken ,
- generateRefreshToken
+ generateRefreshToken, 
+ findOrCreateUser
 }

@@ -1,4 +1,4 @@
-import { registerUserService , generateAccessToken , generateRefreshToken } from "../services/auth.service.js";
+import {   generateAccessToken , generateRefreshToken } from "../services/auth.service.js";
 import APIError from "../utility/apiError.js";
 import asyncHandler from "../utility/asyncHandler.js";
 import uploadOnCloudinary from "../utility/cloudinary.js";
@@ -11,8 +11,7 @@ import Address from "../models/auth-models/address.model.js";
 import sendEmail from "../services/email.service.js";
 import { hashCodeHMAC, createVerificationCode, verifyCode } from "../utility/verificationCode.js";
 import VerificationCode from "../models/auth-models/verificationCode.model.js";
-
-
+import { findOrCreateUser } from "../services/auth.service.js";
 
 // ## user(buyer) registration controller
 
@@ -20,7 +19,7 @@ const registerBuyerController = asyncHandler( async(req , res , next)=>{
 
         //get user data 
 
-        console.log("irunned")
+  
 
         const {email , password, username} = req.body
 
@@ -385,6 +384,97 @@ const setupUserAddressController = asyncHandler(async(req , res , next)=>{
     return res.status(200).json(new APIResponse(200 , address , "address added successfully"))
 
 })
+
+ const googleCallbackController = async (req, res, next) => {
+
+  try {
+
+    console.log("inside callback google")
+
+   const userData = req.user
+
+   
+
+  if (!userData) {
+    return res.redirect(`${process.env.CLIENT_URL}/login` || `${process.env.DEV_FRONTEND_URL}/login`);
+  }
+
+  const user = await findOrCreateUser(userData , "google");
+  console.log(user)
+
+ 
+     const accessToken =  generateAccessToken(user._id)
+
+      
+
+        const refreshToken = generateRefreshToken(user._id);
+
+        user.refreshToken = refreshToken;
+        await user.save();
+      
+        
+        res.cookie("refreshToken", refreshToken, {
+         httpOnly: true,
+         secure: false, // Set to true in production (requires HTTPS)
+         sameSite: "strict",
+         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        })
+
+  
+  // return res.redirect(`${process.env.CLIENT_URL}/dashboard` || `${process.env.DEV_FRONTEND_URL}/dashboard`); // changed from login to your route
+
+
+  return res.redirect (process.env.DEV_FRONTEND_URL)
+    
+  } catch (error) {
+
+    console.log(error)
+    next(error)
+    
+  }
+
+
+};
+ const facebookCallbackController = async (req, res, next) => {
+
+  try {
+
+    console.log("inside callback facebook")
+
+   const userData = req.user
+
+   
+
+  if (!userData) {
+    return res.redirect(`${process.env.CLIENT_URL}/login` || `${process.env.DEV_FRONTEND_URL}/login`);
+  }
+
+  const user = await findOrCreateUser(userData , "facebook");
+  console.log(user)
+
+ 
+     const refreshToken =  generateRefreshToken(user._id)
+ res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false, // 🔥 set true in production (HTTPS)
+    sameSite: "lax",
+  });
+
+  
+  // return res.redirect(`${process.env.CLIENT_URL}/dashboard` || `${process.env.DEV_FRONTEND_URL}/dashboard`); // changed from login to your route
+
+
+  return res.redirect (process.env.DEV_FRONTEND_URL)
+    
+  } catch (error) {
+
+    console.log(error)
+    next(error)
+    
+  }
+};
+
+
 export { 
     registerBuyerController, 
     loginUserController, 
@@ -392,5 +482,7 @@ export {
     refreshTokenController, 
     setupUserAddressController,
     resendVerificationCodeController, 
-    compareVerificationCodeController
+    compareVerificationCodeController, 
+    googleCallbackController,
+    facebookCallbackController
 }
