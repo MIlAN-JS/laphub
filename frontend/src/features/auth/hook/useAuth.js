@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 import { useDispatch } from 'react-redux'
-import { authStart, authFailure , authSuccess , clearError, authVerify } from '../context/auth.slice.js'
-import { loginUserService, refreshToken, registerBuyerUser, registerSellerService, verifyUserService } from '../service/auth.api.js'
+import { authStart, authFailure , authSuccess , clearError, authVerify, logout  } from '../context/auth.slice.js'
+import { loginUserService, logoutUserService, refreshToken, registerBuyerUser, registerSellerService, verifyUserService } from '../service/auth.api.js'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -132,6 +132,19 @@ const useAuth = ()=>{
         }
     }
 
+    const handleLogout = async ()=>{
+        try {
+            await logoutUserService()
+        } catch (error) {
+            console.log("cannot logout user" , error.message)
+        } finally {
+            // Always clear local session, even if the server call failed,
+            // so the user is never stuck "logged in" on their own device.
+            dispatch(logout())
+            navigate("/login")
+        }
+    }
+
     // const handleGetUser = async()=>{
     //     try {
 
@@ -167,7 +180,7 @@ const useAuth = ()=>{
         dispatch(clearError())
     }
 
-    return {handleBuyerRegister , handleSellerRegister , handleVerify , handleRefresh , handleLogin , handleClearError , handleGoogleLogin }
+    return {handleBuyerRegister , handleSellerRegister , handleVerify , handleRefresh , handleLogin , handleClearError , handleGoogleLogin , handleLogout }
 
 
 

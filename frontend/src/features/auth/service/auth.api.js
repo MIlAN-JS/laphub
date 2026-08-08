@@ -45,6 +45,11 @@ return response.data
     return response.data
 }
 
+const logoutUserService = async()=> {
+    const response = await api.post("/auth/logout")
+    return response.data
+}
+
 
 const verifyUserService = async({email , code})=> {
     const response = await api.post("/auth/verify-code" , {email , code})
@@ -57,5 +62,6 @@ export {
     loginUserService,
     registerSellerService,
     refreshToken,
-    verifyUserService
+    verifyUserService, 
+    logoutUserService
 }

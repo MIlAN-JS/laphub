@@ -3,6 +3,7 @@ import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 import { FiMessageSquare, FiGrid, FiPackage, FiUser } from "react-icons/fi"
 import NavAction from "../ui/NavAction"
+import LogoutButton from "./LogoutButton"
 
 function UserActions({ mobile = false }) {
   const user = useSelector((state) => state.auth.user)
@@ -26,6 +27,8 @@ function UserActions({ mobile = false }) {
           <FiUser size={16} />
         </span>
       </Link>
+
+      <LogoutButton mobile={mobile} />
     </div>
   )
 }
