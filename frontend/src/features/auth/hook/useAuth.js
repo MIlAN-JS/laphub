@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 import { useDispatch } from 'react-redux'
-import { authStart, authFailure , authSuccess , clearError } from '../context/auth.slice.js'
-import { loginUserService, refreshToken, registerUser } from '../service/auth.api.js'
+import { authStart, authFailure , authSuccess , clearError, authVerify } from '../context/auth.slice.js'
+import { loginUserService, refreshToken, registerBuyerUser, registerSellerService, verifyUserService } from '../service/auth.api.js'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -13,23 +13,19 @@ const useAuth = ()=>{
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-    const handleRegister = async({username  , email , password , isSeller})=>{
+    const handleBuyerRegister = async({username  , email , password })=>{
 
         try {
-
-        
-
             dispatch(authStart())
-            const response = await registerUser({username  , email , password , isSeller});
-            console.log("response of register user" , response)
+            const response = await registerBuyerUser({username  , email , password });
             dispatch(authSuccess({
-                user : response.data.user, 
-                accessToken : response.data.accessToken
+                user : response?.data?.user,
+                accessToken : response?.data?.accessToken
             }))
-            navigate("/")
-            
+            navigate("/verify" , { state : { email } })
+
         } catch(error) {
-            
+
     const message =
       error.response?.data?.message ||
       error.message ||
@@ -40,6 +36,54 @@ const useAuth = ()=>{
         }
     }
 
+    const handleSellerRegister = async({email , password, storeName , storeNumber , businessType, panNumber, panImage, country,  state,  city,  street, postalCode})=>{
+
+        try {
+            dispatch(authStart())
+            const response = await registerSellerService({email , password, storeName , storeNumber , businessType, panNumber, panImage, country,  state,  city,  street, postalCode});
+            dispatch(authSuccess({
+                user : response?.data?.user,
+                accessToken : response?.data?.accessToken
+            }))
+            console.log(response)
+            navigate("/verify" , { state : { email } })
+
+        } catch(error) {
+
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong";
+
+    dispatch(authFailure(message));
+    console.log("cannot register user" , error.message)
+        }
+
+    }
+
+    const handleVerify = async ({email, code }) => {
+        try {
+        dispatch(authStart())
+        const response = await verifyUserService({email, code});
+        console.log(response)
+        dispatch(authVerify({user : response?.data?.user , accessToken : response.data?.accessToken}))
+        console.log(("success bro "))
+        navigate("/")
+        } catch (error) {
+            const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong";
+
+    dispatch(authFailure(message));
+    console.log("cannot register user" , error.message)
+
+        }
+    }
+
+   const handleGoogleLogin = () => {
+    window.location.href = import.meta.env.VITE_LOCAL_GOOGLE_URL;
+  };
     const handleLogin = async({email , password})=>{
         try {
             dispatch(authStart())
@@ -119,7 +163,11 @@ const useAuth = ()=>{
    
 
 
-    return {handleRegister , handleRefresh , handleLogin}
+    const handleClearError = ()=>{
+        dispatch(clearError())
+    }
+
+    return {handleBuyerRegister , handleSellerRegister , handleVerify , handleRefresh , handleLogin , handleClearError , handleGoogleLogin }
 
 
 

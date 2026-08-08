@@ -75,7 +75,7 @@ function SearchBar() {
 
   return (
     
-    <div ref={containerRef} className="relative w-full max-w-md">
+    <div ref={containerRef} className="relative flex-1 max-w-150">
       <div className="flex items-center bg-white border border-neutral rounded-md overflow-hidden focus-within:border-olive">
         <input
           type="text"
@@ -84,7 +84,7 @@ function SearchBar() {
           onKeyDown={handleKeyDown}
           onFocus={() => query.trim() && setIsOpen(true)}
           placeholder="Search in Laphub"
-          className="flex-1 px-4 py-2 text-ink placeholder-neutral outline-none bg-transparent"
+          className="flex-1 px-4 py-1 text-sm text-ink placeholder-neutral outline-none bg-transparent"
         />
         <button
           type="button"

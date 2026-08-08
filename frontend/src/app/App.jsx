@@ -23,7 +23,10 @@ const App = () => {
 
 
   return (
-    <div className='text-3xl text-blue-800 '>
+    <div className='text-3xl text-blue-800  '>
+
+
+  
      <Outlet/>
      
 

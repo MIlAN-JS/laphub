@@ -46,15 +46,21 @@ const authSlice = createSlice ({
 
         }, 
 
-
         authSuccess : (state , action)=>{
             state.user = action.payload.user
-            state.accessToken = action.payload.accessToken
+            state.accessToken = action.payload?.accessToken
             state.isAuthenticated = true
             state.isLoading = false
             state.error = null
-        }, 
+        },
 
+        authVerify : (state, action)=>{
+          state.user = action.payload.user
+          state.isAuthenticated = true, 
+          state.isLoading = false, 
+          state.accessToken = action.payload.accessToken
+          state.error = null
+        },
         authFailure : (state , action)=>{
             state.user = null
             state.isAuthenticated = false
@@ -75,5 +81,5 @@ const authSlice = createSlice ({
 
 
 
-export const {authStart , authSuccess , authFailure , clearError} = authSlice.actions
+export const {authStart , authSuccess , authFailure , clearError, authVerify} = authSlice.actions
 export default authSlice.reducer
