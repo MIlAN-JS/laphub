@@ -212,7 +212,7 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
 
 
 
-  const {email , password, storeName , storeNumber , businessType, businessAddress, panNumber} = req.body
+  const {email , password, storeName , storeNumber , businessType, businessAddress, panNumber ,country ,  state ,  city ,  street , postalCode } = req.body
     const panImageLocalPath = req.file?.path
 
  // check if seller exists 
@@ -230,13 +230,21 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
     throw new APIError(500 , "cannot upload pan image to cloudinary" , "SERVER_ERROR")
  }
 
+    const address = await Address.create({
+        country , 
+        state , 
+        city , 
+        street , 
+        postalCode
+    })
+
     const seller = await Seller.create({
         email , 
         password ,
         storeName , 
         storeNumber , 
         businessType , 
-        businessAddress ,
+        businessAddress: address._id, 
         panNumber ,
         panImage : panImgUrl
     })
