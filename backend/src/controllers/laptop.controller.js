@@ -201,12 +201,35 @@ const getAllLaptopsController = asyncHandler(async(req , res , next)=>{
     const {page =1, limit = 20} = req.query
     const skip = (page - 1) * limit
 
-    const laptops = await laptopModel.find({status : "active"}).skip(skip).limit(limit).populate("seller")
+    const laptops = await laptopModel.aggregate([
+        {
+            $match : {
+                status : "active"
+            }
+        },
+        {
+            $sort : { createdAt : -1 }
+        },
+        {
+            $skip : Number(skip)
+        },
+        {
+            $limit : Number(limit)
+        },
+        {
+            $lookup : {
+                from : "laptopvariants",
+                localField : "_id",
+                foreignField : "product",
+                as : "variants"
+            }
+        }
+    ])
 
 
     res.status(200).json(new APIResponse(200 , laptops , "laptops fetched successfully"))
 
-     
+
 
 
 })

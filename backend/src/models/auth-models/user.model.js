@@ -5,7 +5,8 @@ import Address from "./address.model.js";
 
 
 
-const userSchema = new mongoose.Schema({
+export const userSchema = new mongoose.Schema({
+
     email : {
         type: String,
         required: true,
@@ -25,24 +26,22 @@ const userSchema = new mongoose.Schema({
         type : Boolean,
         default : false
     }, 
-
     username : {
         type: String,
         required: true
     }, 
     contact : {
         type: String, 
-
     },
-    avatar : {
-        type : String 
-    } , 
+ 
    addresses: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Address",
   }],  
-  
-
+    isVerified :{
+        type : Boolean,
+        default : false
+    },
     refreshToken : {
         type : String, 
     }

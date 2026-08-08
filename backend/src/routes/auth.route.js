@@ -1,6 +1,6 @@
 import Router from "express";
 import { validateLoginUser, validateRegisterUser, validateSellerRegistration } from "../validators/auth.validator.js";
-import { loginUserController, registerSellerController, registerUserController, setupUserAddressController } from "../controllers/auth.controller.js";
+import { compareVerificationCodeController, loginUserController, registerBuyerController, registerSellerController, resendVerificationCodeController, setupUserAddressController } from "../controllers/auth.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyUser from "../middlewares/auth.middleware.js";
 import { refreshTokenController } from "../controllers/auth.controller.js";
@@ -10,10 +10,10 @@ const authRouter = Router();
 
 /**
  * @route /api/auth/register
- * @description new user registration
+ * @description new user(buyer) registration
  * @access public
  */
-authRouter.post("/register" ,upload.single("avatar") , registerUserController )
+authRouter.post("/register" , registerBuyerController )
 
 
 /**
@@ -55,9 +55,20 @@ authRouter.post("/refresh-token" , refreshTokenController )
 authRouter.post("/setup-address", verifyUser , setupUserAddressController)
 
 
+/**
+ * @route /resend-verification-code
+ * @description resend the verification code for authenticaiton
+ * @access public
+ */
 
+authRouter.post("/resend-verification-code" , resendVerificationCodeController)
 
     
-
+/**
+ * @route /verify-code
+ * @description verification of auth code
+ * @access public
+ */
+authRouter.post("/verify-code" , compareVerificationCodeController)
 
 export default authRouter;

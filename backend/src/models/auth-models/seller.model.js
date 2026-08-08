@@ -1,13 +1,30 @@
 import mongoose from "mongoose";
+import userSchema from "./user.model.js";
 
 const sellerSchema = new mongoose.Schema(
   {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      unique: true,
-    },
+     email : {
+        type: String,
+        required: true,
+        unique: true, 
+        
+    }, 
+    password : {
+        type: String,
+       min : [5, "Password must be at least 6 characters long"], 
+    }, 
+    role : {
+        type: String,
+        enum: ["buyer", "seller"],
+        default: "buyer"
+    }, 
+    username : {
+        type: String,
+        required: true
+    }, 
+    avatar : {
+        type : String 
+    } , 
 
     storeName: {
       type: String,
@@ -57,6 +74,11 @@ const sellerSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
+    },
+
+    verificationToken: {
+      type: String,
+      default: "",
     },
     
     

@@ -8,32 +8,32 @@ import Seller from "../models/auth-models/seller.model.js";
 import jwt from "jsonwebtoken"
 import config from "../config/config.js";
 import Address from "../models/auth-models/address.model.js";
+import sendEmail from "../services/email.service.js";
+import { hashCodeHMAC, createVerificationCode, verifyCode } from "../utility/verificationCode.js";
+import VerificationCode from "../models/auth-models/verificationCode.model.js";
 
 
 
+// ## user(buyer) registration controller
 
-// ## user registration controller
-const registerUserController = asyncHandler( async(req , res , next)=>{
+const registerBuyerController = asyncHandler( async(req , res , next)=>{
 
         //get user data 
 
-        const {email , password , role, username} = req.body
-        //  const localAvatarPath = req.file?.path
+        console.log("irunned")
+
+        const {email , password, username} = req.body
 
         console.log(req.body , "items are")
 
-      
+    
+         const existingUser = await User.findOne({email})
+     
 
-
-         const existedUser = await User.findOne({email})
-         console.log(existedUser)
-
-         if(existedUser){
+         if(existingUser){
             throw new APIError(409 , "email already exists" , "USER_ALREADY_EXISTS")
          }
     
-
-        // if(!localAvatarPath){
         //     throw new APIError(400 , "file upload null " , "FILE_NOT_FOUND")
         // }
 
@@ -50,44 +50,42 @@ const registerUserController = asyncHandler( async(req , res , next)=>{
         const newUser = await User.create({
              email, 
             password ,   
-            role : role ? "buyer " : "seller", 
+            role : "buyer",
             username 
         })
+
 
          if(!newUser._id){
             throw new APIError(500 , "cannot register user", "SERVER_ERROR")
             
        }
 
-        //generate store refresh token in cookie and in newUser obj
 
-        const refreshToken = generateRefreshToken(newUser._id);
 
-        res.cookie("refreshToken" , refreshToken, {
-            httpOnly : true,
-            secure : false,
-            maxAge : 24 * 60 * 60 * 1000
-        })
-        newUser.refreshToken = refreshToken
-        
+           
+           const {code , codeHash , expiresAt} = await createVerificationCode()
 
-        await newUser.save()
+           console.log(code , codeHash , expiresAt)
 
+         const verificationCode =  await VerificationCode.updateOne(
+            { email },                                              // find by email
+            { $set: { codeHash, expiresAt, attempts: 0, createdAt: new Date() } },
+            { upsert: true }                                        // create if doesn't exist
+          );
+          if(!verificationCode){
+            throw new APIError(500 , "cannot register user", "SERVER_ERROR")
+          }
+          else{
+            const {data , error} = await sendEmail({
+           email : email , 
+           subject : "verification code",
+           html : `<p>your verification code for laphub registration is  ${code}</p>`
+       })
+
+          }
+           
        
-
-       const accessToken = generateAccessToken(newUser._id);
-
-
-
-     const userData = {
-        email : newUser.email, 
-        contact : newUser.contact, 
-        username : newUser.username,
-        role : newUser.role
-     }
-
-
-     return res.status(201).json(new APIResponse(201 ,  {user : userData , accessToken   } ,"user registered success" ))
+     return res.status(201).json(new APIResponse(201 ,  {user : null} ,"user registered success please enter code to verify" ))
 
 
 
@@ -96,7 +94,100 @@ const registerUserController = asyncHandler( async(req , res , next)=>{
 
 
 
-// ## seller registration controller
+const resendVerificationCodeController = asyncHandler( async(req , res , next)=>{
+
+    const {email} = req.body
+
+    const existingUser = await User.findOne({email})
+
+    if(!existingUser){
+        throw new APIError(404 , "user not found" , "USER_NOT_FOUND")
+    }
+
+    const {code , codeHash , expiresAt} = await createVerificationCode()
+
+    const verificationCode =  await VerificationCode.updateOne(
+       { email },                                              // find by email
+       { $set: { codeHash, expiresAt, attempts: 0, createdAt: new Date() } },
+       { upsert: true }                                        // create if doesn't exist
+     );
+
+     if(!verificationCode){
+       throw new APIError(500 , "cannot register user", "SERVER_ERROR")
+     }
+     else{
+       const {data , error} = await sendEmail({
+      email : "alexmagar262@gmail.com",
+      subject : "verification code",
+      html : `<p>your verification code for laphub registration is  ${code}</p>`
+  })
+
+     }
+       
+   
+return res.status(201).json(new APIResponse(201 ,  {user : null} ,"resend code success" ))
+
+
+})
+
+const compareVerificationCodeController = asyncHandler(async (req, res, next) => {
+  const { email, code } = req.body;
+
+  const existingUser = await User.findOne({ email });
+
+  if (!existingUser) {
+    throw new APIError(404, "user not found", "USER_NOT_FOUND");
+  }
+
+  const verificationCode = await VerificationCode.findOne({ email });
+
+  if (!verificationCode) {
+    throw new APIError(404, "verification code not found", "VERIFICATION_CODE_NOT_FOUND");
+  }
+
+  if (new Date() > verificationCode.expiresAt) {
+    await VerificationCode.deleteOne({ email });
+    throw new APIError(400, "code expired", "CODE_EXPIRED");
+  }
+
+  if (verificationCode.attempts >= 5) {
+    throw new APIError(429, "too many attempts, request a new code", "TOO_MANY_ATTEMPTS");
+  }
+
+  console.log(code , verificationCode.codeHash)
+
+  const isCodeCorrect = await verifyCode({ submittedCode: code, storedHash: verificationCode.codeHash });
+
+  if (!isCodeCorrect) {
+    await VerificationCode.updateOne({ email }, { $inc: { attempts: 1 } });
+    throw new APIError(401, "code incorrect", "CODE_INCORRECT");
+  }
+
+  await User.updateOne({ email }, { $set: { isVerified: true } });
+  await VerificationCode.deleteOne({ email });
+
+  const accessToken = generateAccessToken(existingUser._id);
+  const refreshToken = generateRefreshToken(existingUser._id);
+
+  existingUser.refreshToken = refreshToken;
+  await existingUser.save();
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false,
+    maxAge: 24 * 60 * 60 * 1000
+  });
+
+  existingUser.password = undefined;
+  existingUser.refreshToken = undefined;
+  existingUser.panImage = undefined;
+  existingUser.panId = undefined;
+
+  res.status(200).json(new APIResponse(200, { existingUser, accessToken }, "user verified successfully"));
+});
+
+
+// ##. user (seller)  registration controller
 
 const registerSellerController = asyncHandler(async(req , res , next)=>{
 
@@ -295,10 +386,11 @@ const setupUserAddressController = asyncHandler(async(req , res , next)=>{
 
 })
 export { 
-    registerUserController, 
+    registerBuyerController, 
     loginUserController, 
     registerSellerController, 
     refreshTokenController, 
-    setupUserAddressController
-   
+    setupUserAddressController,
+    resendVerificationCodeController, 
+    compareVerificationCodeController
 }

@@ -27,7 +27,9 @@ const config = {
     CLOUDINARY_API_SECRET : process.env.CLOUDINARY_API_SECRET,
     CLOUDINARY_API_KEY : process.env.CLOUDINARY_API_KEY, 
     CLOUDINARY_URL : process.env.CLOUDINARY_URL, 
-    NODE_ENV : process.env.NODE_ENV
+    NODE_ENV : process.env.NODE_ENV, 
+    RESEND_API_KEY : process.env.RESEND_API_KEY,
+    VERIFICATION_CODE_HASH_SECRET : process.env.VERIFICATION_CODE_HASH_SECRET
 
 }
 
