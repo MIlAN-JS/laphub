@@ -82,6 +82,10 @@ const sellerSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    refreshToken: {
+      type: String,
+      default: "",
+    },
     
     
   },

@@ -136,7 +136,14 @@ return res.status(201).json(new APIResponse(201 ,  {user : null} ,"resend code s
 const compareVerificationCodeController = asyncHandler(async (req, res, next) => {
   const { email, code } = req.body;
 
-  const existingUser = await User.findOne({ email });
+  let existingUser = await User.findOne({ email }) ;
+  let accountType = "buyer"
+
+
+  if(!existingUser){ 
+    existingUser = await Seller.findOne({email});
+    accountType = "seller"
+  }
 
   if (!existingUser) {
     throw new APIError(404, "user not found", "USER_NOT_FOUND");
@@ -166,7 +173,13 @@ const compareVerificationCodeController = asyncHandler(async (req, res, next) =>
     throw new APIError(401, "code incorrect", "CODE_INCORRECT");
   }
 
-  await User.updateOne({ email }, { $set: { isVerified: true } });
+  //update the isVerified field 
+
+
+  const updatedUser = accountType === "seller" ?  await Seller.updateOne({ email }, { $set: { isVerified: true } }) : await User.updateOne({ email }, { $set: { isVerified: true } })
+
+
+
   await VerificationCode.deleteOne({ email });
 
   const accessToken = generateAccessToken(existingUser._id);
@@ -187,6 +200,8 @@ const compareVerificationCodeController = asyncHandler(async (req, res, next) =>
   existingUser.panId = undefined;
 
   res.status(200).json(new APIResponse(200, { user : existingUser, accessToken : accessToken }, "user verified successfully"));
+
+
 });
 
 
@@ -197,7 +212,7 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
 
 
 
-  const {email , password, storename , storeNumber , businessType, businessAddress, panNumber ,panImage} = req.body
+  const {email , password, storeName , storeNumber , businessType, businessAddress, panNumber} = req.body
     const panImageLocalPath = req.file?.path
 
  // check if seller exists 
@@ -349,8 +364,6 @@ const refreshTokenController = asyncHandler(async(req , res , next)=>{
 
 
 })
-
-
 
 // address setup controller 
 

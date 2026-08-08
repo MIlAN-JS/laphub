@@ -5,6 +5,7 @@ import APIResponse from "../utility/apiResponse.js";
 import asyncHandler from "../utility/asyncHandler.js";
 import APIError from "../utility/apiError.js";
 import Seller from "../models/auth-models/seller.model.js";
+import User from "../models/auth-models/user.model.js";
 
 
 
@@ -160,14 +161,13 @@ const getLaptopByIdController = asyncHandler(async(req , res , next)=>{
 
     const {laptopId} = req.params
     const userId = req.userId
-    // seller exists ? 
-    const existingSeller = await Seller.findOne({ user : userId})
+    const user = await User.findOne({ user : userId})
 
-    if(!existingSeller){
-        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
-        throw error
-    }
-
+   
+if(!user){
+    const error = new APIError(404 , "user not found" , "USER_NOT_FOUND")
+    throw error
+}
     const laptop = await laptopModel.aggregate([
         {
             $match : {

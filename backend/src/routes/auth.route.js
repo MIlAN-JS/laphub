@@ -31,7 +31,6 @@ authRouter.post("/login", validateLoginUser , loginUserController )
  */
 authRouter.post(
     "/register-seller",
-      verifyUser ,
       upload.single("panImage"),
       validateSellerRegistration ,
       registerSellerController 
