@@ -87,7 +87,7 @@ const useAuth = ()=>{
     const handleLogin = async({email , password})=>{
         try {
             dispatch(authStart())
-            const response = await loginUserService({   email , password });
+            const response = await loginUserService({email , password });
             console.log("response of login user" , response)
             dispatch(authSuccess({
                 user : response.data.user, 
