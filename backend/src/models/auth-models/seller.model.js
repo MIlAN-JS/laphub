@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import userSchema from "./user.model.js";
+import bcrypt from "bcrypt"
+import Address from "./address.model.js";
 
 const sellerSchema = new mongoose.Schema(
   {
@@ -20,7 +22,7 @@ const sellerSchema = new mongoose.Schema(
     }, 
     username : {
         type: String,
-        required: true
+        
     }, 
     avatar : {
         type : String 
@@ -89,5 +91,18 @@ const sellerSchema = new mongoose.Schema(
 );
 
 const Seller =  mongoose.model("Seller", sellerSchema);
+
+
+sellerSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+
+  this.password = await bcrypt.hash(this.password, 10);
+});
+
+
+    sellerSchema.methods.comparePassword = async function (password) {
+        console.log(password , this.password)
+    return await bcrypt.compare(password, this.password);
+    };
 
 export default Seller; 

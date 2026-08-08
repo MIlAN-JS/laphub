@@ -82,15 +82,19 @@ const registerBuyerController = asyncHandler( async(req , res , next)=>{
        })
 
           }
+
+          newUser.password = null 
+          newUser.refreshToken = null
+          newUser.panImage = null
+          newUser.panId = null
            
        
-     return res.status(201).json(new APIResponse(201 ,  {user : null} ,"user registered success please enter code to verify" ))
+     return res.status(201).json(new APIResponse(201 ,  {user : newUser} ,"user registered success please enter code to verify" ))
 
 
 
 
 })
-
 
 
 const resendVerificationCodeController = asyncHandler( async(req , res , next)=>{
@@ -182,7 +186,7 @@ const compareVerificationCodeController = asyncHandler(async (req, res, next) =>
   existingUser.panImage = undefined;
   existingUser.panId = undefined;
 
-  res.status(200).json(new APIResponse(200, { existingUser, accessToken }, "user verified successfully"));
+  res.status(200).json(new APIResponse(200, { user : existingUser, accessToken : accessToken }, "user verified successfully"));
 });
 
 
@@ -191,42 +195,29 @@ const compareVerificationCodeController = asyncHandler(async (req, res, next) =>
 const registerSellerController = asyncHandler(async(req , res , next)=>{
 
 
-    // check if user is registered 
-    const userId = req.userId 
-
-    console.log(userId)
 
 
-
-    const existingUser = await User.findById(userId)
- 
-
-    
-
-    if(!existingUser){
-        const error = new APIError(401 , "user doesn't exist please register first ", "USER_NOT_FOUND")
-        throw error
-    }
-
-    console.log(existingUser)
-
-    const businessAddress = existingUser.addresses
-
-    // destructure all the data that came from frontend  
-
-    const {storeName , storeNumber , businessType , phoneNumber  , panNumber } = req.body
-
+  const {email , password, storename , storeNumber , businessType, businessAddress, panNumber ,panImage} = req.body
     const panImageLocalPath = req.file?.path
 
-    //upload pan image to cloudinary
+ // check if seller exists 
 
-    const panImgUrl = await uploadOnCloudinary(panImageLocalPath)
+ const existingSeller = await Seller.findOne({email : email})
+
+ if(existingSeller){
+    throw new APIError(409 , "User with this email is already registered as seller " , "SELLER_ALREADY_EXISTS")
+ }
 
 
-    // create seller object
+ const panImgUrl = await uploadOnCloudinary(panImageLocalPath)
+
+ if(!panImgUrl){
+    throw new APIError(500 , "cannot upload pan image to cloudinary" , "SERVER_ERROR")
+ }
 
     const seller = await Seller.create({
-        user : userId , 
+        email , 
+        password ,
         storeName , 
         storeNumber , 
         businessType , 
@@ -234,30 +225,41 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
         panNumber ,
         panImage : panImgUrl
     })
-    
 
     if(!seller){
-
-        throw new APIError(500 ,"cannot register seller")
-        
+        throw new APIError(500 ,"cannot register seller")    
     }
 
-    // await seller.populate({
-    // path: "user",
-    // select: "-password -refreshToken -panImage -panId",
-    //     });
+    const {code , codeHash , expiresAt} = await createVerificationCode()
+    
+    const verificationCode = await VerificationCode.updateOne(
+        { email },                                              // find by email
+        { $set: { codeHash, expiresAt, attempts: 0, createdAt: new Date() } },
+        { upsert: true }                                        // create if doesn't exist
+      );
+      if(!verificationCode){
+        throw new APIError(500 , "cannot register user", "SERVER_ERROR")
+      }
+      else{
+        const {data , error} = await sendEmail({
+         email : "alexmagar262@gmail.com",
+         subject : "verification code",
+         html : `<p>your verification code for laphub registration is  ${code}</p>`
+     })
+ 
+        }
+  
+   
 
 
-    // for now normal isVerified true but later we will do admin verification
 
-    seller.isVerified  = true
+    seller.password = undefined
+    seller.panImage = undefined
+    seller.panId = undefined
+    seller.refreshToken = undefined
 
-    await seller.save()
-
-    return res.status(200).json( new APIResponse(200 , seller , "seller registered successfully"))
-
-
-
+    
+    return res.status(200).json( new APIResponse(200 , {user : seller } , "seller registered successfully"))
 
 })
 
@@ -403,22 +405,13 @@ const setupUserAddressController = asyncHandler(async(req , res , next)=>{
   console.log(user)
 
  
-     const accessToken =  generateAccessToken(user._id)
-
-      
-
         const refreshToken = generateRefreshToken(user._id);
 
         user.refreshToken = refreshToken;
         await user.save();
       
         
-        res.cookie("refreshToken", refreshToken, {
-         httpOnly: true,
-         secure: false, // Set to true in production (requires HTTPS)
-         sameSite: "strict",
-         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        })
+        res.cookie("refreshToken", refreshToken)
 
   
   // return res.redirect(`${process.env.CLIENT_URL}/dashboard` || `${process.env.DEV_FRONTEND_URL}/dashboard`); // changed from login to your route
