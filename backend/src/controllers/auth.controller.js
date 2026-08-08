@@ -26,8 +26,9 @@ const registerBuyerController = asyncHandler( async(req , res , next)=>{
         console.log(req.body , "items are")
 
     
-         const existingUser = await User.findOne({email})
-     
+         const existingUser = await User.findOne({email}) || await Seller.findOne({email})
+
+
 
          if(existingUser){
             throw new APIError(409 , "email already exists" , "USER_ALREADY_EXISTS")
@@ -217,10 +218,10 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
 
  // check if seller exists 
 
- const existingSeller = await Seller.findOne({email : email})
+ const existingSeller = await Seller.findOne({email : email}) || await User.findOne({email : email})
 
  if(existingSeller){
-    throw new APIError(409 , "User with this email is already registered as seller " , "SELLER_ALREADY_EXISTS")
+    throw new APIError(409 , "User with this email is already registered please login " , "USER_ALREADY_EXISTS")
  }
 
 
@@ -295,7 +296,11 @@ const loginUserController = async(req , res , next)=>{
 
     // check if user exists
 
-    const user = await User.findOne({email}).populate("addresses")
+    let user = await User.findOne({email}).populate("addresses")
+
+    if(!user){
+        user = await Seller.findOne({email}).populate("businessAddress")
+    }
 
     if(!user){
         throw new APIError(401 , "user not found" , "USER_NOT_FOUND")
@@ -303,7 +308,7 @@ const loginUserController = async(req , res , next)=>{
 
     // check if password is correct
 
-    const isPasswordCorrect = await user.comparePassword(password)
+    const isPasswordCorrect = await user.comparePassword(password) 
 
     if(!isPasswordCorrect){
         throw new APIError(401 , "password incorrect" , "PASSWORD_INCORRECT")
@@ -488,6 +493,13 @@ const setupUserAddressController = asyncHandler(async(req , res , next)=>{
   }
 };
 
+const logoutUserController = asyncHandler(async(req , res , next)=>{
+
+    res.clearCookie("refreshToken")
+    res.status(200).json(new APIResponse(200 , {} , "user logged out successfully"))
+
+})
+
 
 export { 
     registerBuyerController, 
@@ -498,5 +510,6 @@ export {
     resendVerificationCodeController, 
     compareVerificationCodeController, 
     googleCallbackController,
-    facebookCallbackController
+    facebookCallbackController, 
+    logoutUserController
 }

@@ -2,6 +2,7 @@ import User from "../models/auth-models/user.model.js"
 import bcrypt from "bcrypt"
 import config from "../config/config.js"
 import jwt from "jsonwebtoken"
+import Seller from "../models/auth-models/seller.model.js"
 
 
 
@@ -29,6 +30,10 @@ import jwt from "jsonwebtoken"
   
     const email = emails?.[0]?.value;
 
+
+
+   
+
     const userName = name
       ? `${name.givenName || ''} ${name.familyName || ''}`.trim()
       : displayName;
@@ -42,8 +47,13 @@ import jwt from "jsonwebtoken"
 
     if (email) query.push({ email })
 
-    const user = await User.findOne({ $or: query })
-    if (user) return user
+   
+    const user = await User.findOne({ $or: query }) || await Seller.findOne({ $or : query })
+
+    console.log(user , "oauth user")
+    if (user) {
+      return user
+    }
 
     // create new user
     const newUser = await User.create({

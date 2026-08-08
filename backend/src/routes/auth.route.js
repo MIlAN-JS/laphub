@@ -1,6 +1,6 @@
 import Router from "express";
 import { validateLoginUser, validateRegisterUser, validateSellerRegistration } from "../validators/auth.validator.js";
-import { compareVerificationCodeController, loginUserController, registerBuyerController, registerSellerController, resendVerificationCodeController, setupUserAddressController , googleCallbackController, facebookCallbackController } from "../controllers/auth.controller.js";
+import { compareVerificationCodeController, loginUserController, registerBuyerController, registerSellerController, resendVerificationCodeController, setupUserAddressController , googleCallbackController, facebookCallbackController, logoutUserController } from "../controllers/auth.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyUser from "../middlewares/auth.middleware.js";
 import { refreshTokenController } from "../controllers/auth.controller.js";
@@ -99,6 +99,14 @@ authRouter.get('/facebook/callback',passport.authenticate("facebook",{
     failureRedirect: '/'
 }), facebookCallbackController)
 
+
+/**
+ * @route /api/v1/auth/logout
+ * @description to logout the user
+ * @access public
+ */
+
+authRouter.post("/logout" , logoutUserController)
 
 
 
