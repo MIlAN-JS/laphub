@@ -345,7 +345,7 @@ const refreshTokenController = asyncHandler(async(req , res , next)=>{
 
     const userId = decoded.id
 
-    const user = await User.findById(userId).populate("addresses").select("-password -refreshToken -panImage -panId")
+    const user = await User.findById(userId).populate("addresses").select("-password -refreshToken ") || await Seller.findById(userId).select("-password -refreshToken -panImage -panId").populate("businessAddress")
 
     if(!user){
         throw new APIError(401 , "user not found " , "USER_NOT_FOUND")
