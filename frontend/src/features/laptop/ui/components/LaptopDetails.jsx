@@ -1,3 +1,6 @@
+
+
+
 import { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -17,8 +20,12 @@ import {
   FiTrendingUp,
   FiLoader,
   FiX,
+  FiPlus,
+  FiUpload,
+  FiTrash2,
 } from "react-icons/fi";
 import useLaptop from "../../hook/useLaptop.js";
+
 
 const STATUS_STYLES = {
   active: "bg-[#22C55E]/10 text-[#22C55E]",
@@ -27,6 +34,22 @@ const STATUS_STYLES = {
 };
 
 const VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm"];
+const CURRENCY_OPTIONS = ["NPR", "USD", "EUR"];
+const MAX_NEW_VARIANT_IMAGES = 5;
+
+function makeEmptyVariantForm() {
+  return {
+    color: "",
+    ram: "",
+    storage: "",
+    price: "",
+    currency: "NPR",
+    compareAtPrice: "",
+    stock: "",
+    sku: "",
+    isDefaultVariant: false,
+  };
+}
 
 function isVideo(url = "") {
   return VIDEO_EXTENSIONS.some((ext) => url.toLowerCase().endsWith(ext));
@@ -55,7 +78,7 @@ export default function LaptopDetails({ onBack }) {
   // handleUpdateVariant is assumed to follow the same naming convention as
   // your other useLaptop functions (handleCreateLaptop, handleUpdateLaptop,
   // handleDeleteLaptop, handleGetSellerLaptops). Rename if yours differs.
-  const { handleGetLaptopDetail, handleUpdateVariant } = useLaptop();
+  const { handleGetLaptopDetail, handleUpdateVariant, handleAddVariant } = useLaptop();
 
   // The sample response you gave is an array containing a single laptop
   // object, so laptopDetail is read as an array and we take the first item.
@@ -71,7 +94,14 @@ export default function LaptopDetails({ onBack }) {
   const [editForm, setEditForm] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [isAddingVariant, setIsAddingVariant] = useState(false);
+  const [newVariantForm, setNewVariantForm] = useState(makeEmptyVariantForm());
+  const [newVariantImages, setNewVariantImages] = useState([]);
+  const [isCreatingVariant, setIsCreatingVariant] = useState(false);
+  const [addVariantError, setAddVariantError] = useState(null);
+
   const menuRef = useRef(null);
+  const newVariantImageInputRef = useRef(null);
 
   useEffect(() => {
     if (productId) handleGetLaptopDetail(productId);
@@ -121,6 +151,73 @@ export default function LaptopDetails({ onBack }) {
     setIsSaving(false);
     closeEditModal();
     if (productId) handleGetLaptopDetail(productId);
+  };
+
+  const openAddVariantModal = () => {
+    setOpenMenuId(null);
+    setAddVariantError(null);
+    setNewVariantForm(makeEmptyVariantForm());
+    setNewVariantImages([]);
+    setIsAddingVariant(true);
+  };
+
+  const closeAddVariantModal = () => {
+    if (isCreatingVariant) return;
+    setIsAddingVariant(false);
+    setNewVariantForm(makeEmptyVariantForm());
+    setNewVariantImages([]);
+    setAddVariantError(null);
+    if (newVariantImageInputRef.current) newVariantImageInputRef.current.value = "";
+  };
+
+  const handleNewVariantFieldChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setNewVariantForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleNewVariantImagesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setNewVariantImages((prev) => [...prev, ...files].slice(0, MAX_NEW_VARIANT_IMAGES));
+  };
+
+  const removeNewVariantImage = (index) => {
+    setNewVariantImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCreateVariant = async () => {
+    if (!laptop?._id) return;
+    if (newVariantImages.length === 0) {
+      setAddVariantError("At least one image is required.");
+      return;
+    }
+
+    setIsCreatingVariant(true);
+    setAddVariantError(null);
+    try {
+      await handleAddVariant(laptop._id, {
+        color: newVariantForm.color,
+        ram: newVariantForm.ram,
+        storage: newVariantForm.storage,
+        price: { price: newVariantForm.price, currency: newVariantForm.currency },
+        compareAtPrice: newVariantForm.compareAtPrice,
+        stock: newVariantForm.stock,
+        sku: newVariantForm.sku,
+        isDefaultVariant: newVariantForm.isDefaultVariant,
+        variantImage: newVariantImages,
+      });
+      closeAddVariantModal();
+      if (productId) handleGetLaptopDetail(productId);
+    } catch (error) {
+      const message =
+        error.response?.data?.message || error.message || "Failed to add variant";
+      setAddVariantError(message);
+    } finally {
+      setIsCreatingVariant(false);
+    }
   };
 
   return (
@@ -230,9 +327,19 @@ export default function LaptopDetails({ onBack }) {
 
             {/* Variants */}
             <div>
-              <h2 className="text-sm font-semibold text-[#0F172A] mb-3">
-                Variants ({laptop.variants?.length || 0})
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-[#0F172A]">
+                  Variants ({laptop.variants?.length || 0})
+                </h2>
+                <button
+                  type="button"
+                  onClick={openAddVariantModal}
+                  className="flex items-center gap-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold px-3 py-2 rounded-lg transition shadow-sm"
+                >
+                  <FiPlus className="w-3.5 h-3.5" />
+                  Add variant
+                </button>
+              </div>
 
               <div className="space-y-3">
                 {(laptop.variants || []).map((variant) => (
@@ -502,6 +609,220 @@ export default function LaptopDetails({ onBack }) {
                     </>
                   ) : (
                     "Save changes"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add variant modal */}
+        {isAddingVariant && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/60">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2E8F0] shrink-0">
+                <h3 className="text-base font-semibold text-[#0F172A]">
+                  Add new variant
+                </h3>
+                <button
+                  type="button"
+                  onClick={closeAddVariantModal}
+                  disabled={isCreatingVariant}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition disabled:opacity-60"
+                  aria-label="Close"
+                >
+                  <FiX className="w-4.5 h-4.5" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto px-5 py-5 space-y-4">
+                {addVariantError && (
+                  <div className="flex items-center gap-2 rounded-lg border border-[#F97316]/30 bg-[#F97316]/10 px-3 py-2 text-xs text-[#F97316]">
+                    <FiAlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {addVariantError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      Color
+                    </label>
+                    <input
+                      name="color"
+                      value={newVariantForm.color}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      RAM
+                    </label>
+                    <input
+                      name="ram"
+                      value={newVariantForm.ram}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      Storage
+                    </label>
+                    <input
+                      name="storage"
+                      value={newVariantForm.storage}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      Price
+                    </label>
+                    <input
+                      name="price"
+                      type="number"
+                      value={newVariantForm.price}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      Currency
+                    </label>
+                    <select
+                      name="currency"
+                      value={newVariantForm.currency}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    >
+                      {CURRENCY_OPTIONS.map((currency) => (
+                        <option key={currency} value={currency}>
+                          {currency}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      Compare-at price
+                    </label>
+                    <input
+                      name="compareAtPrice"
+                      type="number"
+                      value={newVariantForm.compareAtPrice}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      Stock
+                    </label>
+                    <input
+                      name="stock"
+                      type="number"
+                      value={newVariantForm.stock}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      SKU
+                    </label>
+                    <input
+                      name="sku"
+                      value={newVariantForm.sku}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-full px-3 py-2 rounded-lg border border-[#E2E8F0] text-sm text-[#0F172A] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-2">
+                    <input
+                      id="isDefaultVariant"
+                      name="isDefaultVariant"
+                      type="checkbox"
+                      checked={newVariantForm.isDefaultVariant}
+                      onChange={handleNewVariantFieldChange}
+                      className="w-4 h-4 rounded border-[#E2E8F0] text-[#2563EB] focus:ring-[#2563EB]/20"
+                    />
+                    <label htmlFor="isDefaultVariant" className="text-xs font-medium text-[#334155]">
+                      Set as default variant
+                    </label>
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-[#334155] mb-1">
+                      Images
+                    </label>
+                    <input
+                      ref={newVariantImageInputRef}
+                      type="file"
+                      accept="image/*,video/*"
+                      multiple
+                      onChange={handleNewVariantImagesChange}
+                      className="hidden"
+                      id="newVariantImages"
+                    />
+                    <label
+                      htmlFor="newVariantImages"
+                      className="flex items-center justify-center gap-2 border border-dashed border-[#E2E8F0] rounded-lg py-3 text-sm text-[#64748B] hover:border-[#2563EB]/40 hover:text-[#2563EB] cursor-pointer transition"
+                    >
+                      <FiUpload className="w-4 h-4" />
+                      Upload images ({newVariantImages.length}/{MAX_NEW_VARIANT_IMAGES})
+                    </label>
+
+                    {newVariantImages.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {newVariantImages.map((file, i) => (
+                          <div key={i} className="relative w-16 h-16 shrink-0">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`New variant ${i + 1}`}
+                              className="w-16 h-16 rounded-lg object-cover border border-[#E2E8F0]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeNewVariantImage(i)}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white border border-[#E2E8F0] flex items-center justify-center text-[#F97316] hover:bg-[#F97316]/10 transition"
+                              aria-label="Remove image"
+                            >
+                              <FiTrash2 className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[#E2E8F0] shrink-0">
+                <button
+                  type="button"
+                  onClick={closeAddVariantModal}
+                  disabled={isCreatingVariant}
+                  className="text-sm font-medium text-[#334155] hover:text-[#0F172A] px-4 py-2 rounded-lg hover:bg-[#F8FAFC] transition disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateVariant}
+                  disabled={isCreatingVariant}
+                  className="flex items-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold px-4 py-2 rounded-lg transition shadow-sm"
+                >
+                  {isCreatingVariant ? (
+                    <>
+                      <FiLoader className="w-4 h-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : (
+                    "Add variant"
                   )}
                 </button>
               </div>

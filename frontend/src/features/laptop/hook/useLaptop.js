@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux"
 import { laptopStart, laptopFailure, laptopSuccess, clearError, laptopSuccessSeller } from "../context/laptop.slice.js"
-import { createLaptopProductService , getSellerLaptops , getLaptopDetail, getAllLaptopsService} from "../service/laptop.service.js"
+import { createLaptopProductService , getSellerLaptops , getLaptopDetail, getAllLaptopsService, addVariantService} from "../service/laptop.service.js"
 import { useNavigate } from "react-router-dom"
 const useLaptop = () => {
 
@@ -85,11 +85,20 @@ const useLaptop = () => {
         }
     }
 
+    // Deliberately doesn't touch the shared laptop.isLoading/error state —
+    // this runs from a modal on top of an already-loaded detail page, and
+    // laptopFailure() would wipe laptopData and blank the page out from
+    // under the user if the submission fails.
+    const handleAddVariant = async(laptopId, variantData)=>{
+        return await addVariantService(laptopId, variantData);
+    }
+
     return {
-        handleCreateLaptop, 
-        handleGetSellerLaptops, 
-        handleGetLaptopDetail, 
-        handleGetLaptops
+        handleCreateLaptop,
+        handleGetSellerLaptops,
+        handleGetLaptopDetail,
+        handleGetLaptops,
+        handleAddVariant
     }
 
 }

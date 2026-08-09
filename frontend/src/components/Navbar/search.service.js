@@ -1,15 +1,16 @@
-import axios from "axios"
-
-// Temporary placeholder API until the real search endpoint exists.
-const DUMMY_SEARCH_URL = "https://dummyjson.com/products/search"
+import api from "../../app/app.api.js"
 
 const searchProducts = async (query, signal) => {
-  const response = await axios.get(DUMMY_SEARCH_URL, {
+  const response = await api.get("/laptop/search", {
     params: { q: query, limit: 6 },
     signal,
   })
 
-  return response.data.products
+  return response.data.data.laptops.map((laptop) => ({
+    id: laptop._id,
+    title: laptop.title,
+    thumbnail: laptop.thumbnail,
+  }))
 }
 
 export { searchProducts }
