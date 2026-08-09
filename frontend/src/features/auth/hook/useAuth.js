@@ -82,7 +82,7 @@ const useAuth = ()=>{
     }
 
    const handleGoogleLogin = () => {
-    window.location.href = import.meta.env.VITE_LOCAL_GOOGLE_URL;
+    window.location.href = "/api/auth/google";
   };
     const handleLogin = async({email , password})=>{
         try {
