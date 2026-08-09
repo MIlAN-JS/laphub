@@ -52,6 +52,25 @@ import Seller from "../models/auth-models/seller.model.js"
 
     console.log(user , "oauth user")
     if (user) {
+      let changed = false
+
+      if (provider === 'google' && !user.googleId) {
+        user.googleId = id
+        changed = true
+      }
+      if (provider === 'facebook' && !user.facebookId) {
+        user.facebookId = id
+        changed = true
+      }
+      if (!user.isVerified) {
+        user.isVerified = true
+        changed = true
+      }
+
+      if (changed) {
+        await user.save()
+      }
+
       return user
     }
 

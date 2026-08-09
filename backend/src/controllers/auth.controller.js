@@ -8,7 +8,7 @@ import Seller from "../models/auth-models/seller.model.js";
 import jwt from "jsonwebtoken"
 import config from "../config/config.js";
 import Address from "../models/auth-models/address.model.js";
-import sendEmail from "../services/email.service.js";
+import sendEmail, { sendEmailwithGmail } from "../services/email.service.js";
 import { hashCodeHMAC, createVerificationCode, verifyCode } from "../utility/verificationCode.js";
 import VerificationCode from "../models/auth-models/verificationCode.model.js";
 import { findOrCreateUser } from "../services/auth.service.js";
@@ -265,8 +265,8 @@ const registerSellerController = asyncHandler(async(req , res , next)=>{
         throw new APIError(500 , "cannot register user", "SERVER_ERROR")
       }
       else{
-        const {data , error} = await sendEmail({
-         email : "alexmagar262@gmail.com",
+        const {data , error} = await sendEmailwithGmail({
+         email : email,
          subject : "verification code",
          html : `<p>your verification code for laphub registration is  ${code}</p>`
      })
