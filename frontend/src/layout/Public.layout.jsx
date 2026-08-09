@@ -4,7 +4,7 @@ import { Outlet } from "react-router-dom";
 
 
 
-export default function PublicLayout() {
+ function PublicLayout() {
   const { user, isLoading } = useSelector((state) => state.auth);
 
   console.log("inside public ")
@@ -19,3 +19,5 @@ export default function PublicLayout() {
 
   return <Outlet />;
 }
+
+export default PublicLayout

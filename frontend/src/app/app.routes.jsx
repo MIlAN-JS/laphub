@@ -5,7 +5,7 @@ import BuyerRegisterPage from "../features/auth/ui/pages/BuyerRegisterPage.jsx";
 import SellerRegisterPage from "../features/auth/ui/pages/SellerRegisterPage.jsx";
 import LoginPage from "../features/auth/ui/pages/LoginPage.jsx";
 import VerifyPage from "../features/auth/ui/pages/VerifyPage.jsx";
-import PublicLayOut from "../layout/Public.layout.jsx"
+import PublicLayout from "../layout/Public.layout.jsx";
 import PrivateLayout from "../layout/Private.layout.jsx";
 import CreateLaptopPage from "../features/laptop/ui/pages/CreateLaptopPage.jsx";
 import Dashboard from "../features/laptop/ui/pages/Dashboard.jsx";
