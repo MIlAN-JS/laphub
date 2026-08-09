@@ -23,7 +23,13 @@ const validateAddToCart = [
     validateRequest
 ]
 
+const validateDeleteCartItem = [
+    param("itemId").isMongoId().withMessage("Invalid item id"),
+    validateRequest
+]
+
 
 export {
-    validateAddToCart
+    validateAddToCart,
+    validateDeleteCartItem
 }

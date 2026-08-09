@@ -63,7 +63,7 @@ const addToCartController = asyncHandler(async(req , res , next)=>{
     const statusCode = existingItem ? 200 : 201
 
     res.status(statusCode).json(
-        APIResponse(statusCode, { cart }, existingItem ? "Cart updated successfully" : "Product added to cart successfully")
+        new APIResponse(statusCode, { cart }, existingItem ? "Cart updated successfully" : "Product added to cart successfully")
     )
 
 })
@@ -79,14 +79,43 @@ const getCartController = asyncHandler(async(req , res , next)=>{
         throw new APIError(404 , "Your cart is empty !!" , "CART_NOT_FOUND")
     }
 
-    res.status(200).json(APIResponse(200 , {cart} , "cart fetched successfully"))
+    res.status(200).json(new APIResponse(200 , {cart} , "cart fetched successfully"))
 
 })
 
 
+const deleteItemFromCartController = asyncHandler(async(req , res , next)=>{
+
+    const userId = req.userId
+    const {itemId} = req.params
+
+    if(!mongoose.isValidObjectId(itemId)){
+        throw new APIError(400 , "invalid item id" , "INVALID_ID")
+    }
+
+    const cart = await Cart.findOne({ user : userId })
+
+    if(!cart){
+        throw new APIError(404 , "cart not found" , "CART_NOT_FOUND")
+    }
+
+    const itemIndex = cart.items.findIndex((item)=>item._id.toString() === itemId)
+
+    if(itemIndex === -1){
+        throw new APIError(404 , "item not found" , "ITEM_NOT_FOUND")
+    }
+
+    cart.items.splice(itemIndex , 1)
+
+    await cart.save()
+
+    res.status(200).json(new APIResponse(200 , {cart} , "item removed from cart successfully"))
+
+})
 
 
 export {
-    addToCartController, 
-    getCartController
+    addToCartController,
+    getCartController,
+    deleteItemFromCartController
 }
