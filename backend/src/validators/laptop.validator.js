@@ -53,6 +53,12 @@ const validateCreateProduct = [
     .withMessage("Display information is required.")
     .isLength({ min: 2, max: 100 })
     .withMessage("Display information is too long."),
+
+  body("categoryId")
+    .notEmpty()
+    .withMessage("Category is required.")
+    .isMongoId()
+    .withMessage("Invalid category."),
     validateResult
 
 
@@ -138,7 +144,71 @@ const validateCreateProduct = [
 ];
 
 
+const validateAddVariant = [
+
+  body("color")
+    .trim()
+    .notEmpty()
+    .withMessage("Color is required.")
+    .isLength({ min: 2, max: 30 })
+    .withMessage("Color must be between 2 and 30 characters."),
+
+  body("ram")
+    .trim()
+    .notEmpty()
+    .withMessage("RAM is required.")
+    .isLength({ min: 2, max: 20 })
+    .withMessage("Invalid RAM value."),
+
+  body("storage")
+    .trim()
+    .notEmpty()
+    .withMessage("Storage is required.")
+    .isLength({ min: 2, max: 20 })
+    .withMessage("Invalid storage value."),
+
+  body("price")
+    .notEmpty()
+    .withMessage("Price is required.")
+    .isFloat({ min: 0 })
+    .withMessage("Price must be a positive number."),
+
+  body("currency")
+    .trim()
+    .notEmpty()
+    .withMessage("Currency is required.")
+    .isIn(["NPR", "USD", "EUR"])
+    .withMessage("Invalid currency."),
+
+  body("compareAtPrice")
+    .optional({ nullable: true, checkFalsy: true })
+    .isFloat({ min: 0 })
+    .withMessage("Compare at price must be a positive number."),
+
+  body("stock")
+    .notEmpty()
+    .withMessage("Stock is required.")
+    .isInt({ min: 0 })
+    .withMessage("Stock must be 0 or greater."),
+
+  body("sku")
+    .trim()
+    .notEmpty()
+    .withMessage("SKU is required.")
+    .isLength({ min: 3, max: 50 })
+    .withMessage("SKU must be between 3 and 50 characters."),
+
+  body("isDefaultVariant")
+    .optional()
+    .isBoolean()
+    .withMessage("isDefaultVariant must be a boolean."),
+
+  validateResult
+];
+
+
 export {
     validateCreateProduct,
-    validateProductVariant
+    validateProductVariant,
+    validateAddVariant
 }

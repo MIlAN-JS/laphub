@@ -1,7 +1,7 @@
 import {Router} from "express"
 import verifyUser from "../middlewares/auth.middleware.js"
-import { createLaptopProductController, deleteLaptopController, deleteLaptopVariantController, getAllLaptopsController, getSellerLaptopsController, updateLaptopController, updateVariantController } from "../controllers/laptop.controller.js"
-import { validateCreateProduct, validateProductVariant } from "../validators/laptop.validator.js"
+import { createLaptopProductController, createVariantController, deleteLaptopController, deleteLaptopVariantController, getAllLaptopsController, getLaptopByIdController, getSellerLaptopsController, searchLaptopsController, updateLaptopController, updateVariantController } from "../controllers/laptop.controller.js"
+import { validateAddVariant, validateCreateProduct, validateProductVariant } from "../validators/laptop.validator.js"
 import { upload } from "../middlewares/multer.middleware.js"
 
 const laptopRouter = Router()
@@ -33,7 +33,7 @@ laptopRouter.get("/get-seller-laptops", verifyUser ,getSellerLaptopsController)
  * @description get single laptop details by laptopId
  * @access private 
  */
-laptopRouter.get("/get-laptop/:laptopId", verifyUser ,getSellerLaptopsController)
+laptopRouter.get("/get-laptop/:laptopId", verifyUser ,getLaptopByIdController)
  
 
 /**
@@ -42,6 +42,14 @@ laptopRouter.get("/get-laptop/:laptopId", verifyUser ,getSellerLaptopsController
  * @access private 
  */
 laptopRouter.get("/get-all-laptop", verifyUser , getAllLaptopsController)
+
+/**
+ * @route /api/v1/laptop/search?q=&brand=&categoryId=&page=1&limit=20
+ * @description search laptops by free-text query, brand and/or category
+ * @access private
+ */
+
+laptopRouter.get("/search", verifyUser , searchLaptopsController)
 
 /**
  * @route /api/v1/delete/:laptopId
@@ -68,9 +76,21 @@ laptopRouter.delete("/delete-variant/:variantId", verifyUser ,deleteLaptopVarian
 laptopRouter.patch("/update-laptop/:laptopId", verifyUser, upload.single("thumbnail") , updateLaptopController )
 
 /**
+ * @route /api/v1/laptop/:laptopId/variants
+ * @description add a new variant to an existing laptop product
+ * @access private & seller only
+ */
+
+laptopRouter.post("/:laptopId/variants",
+        verifyUser,
+        upload.fields([
+        { name : "variantImage" , maxCount : 5 }
+]) , validateAddVariant, createVariantController)
+
+/**
  * @route /api/v1/laptops/:laptopId/variants/:variantId
- * @description 
- * @access 
+ * @description
+ * @access
  */
 
 laptopRouter.patch("/update-variant/:laptopId/variants/:variantId" ,

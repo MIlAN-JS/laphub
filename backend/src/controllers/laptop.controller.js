@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import laptopModel from "../models/laptop-models/laptop.model.js";
 import uploadOnCloudinary from "../utility/cloudinary.js";
 import LaptopVariant from "../models/laptop-models/laptopVariants.model.js";
@@ -5,7 +6,6 @@ import APIResponse from "../utility/apiResponse.js";
 import asyncHandler from "../utility/asyncHandler.js";
 import APIError from "../utility/apiError.js";
 import Seller from "../models/auth-models/seller.model.js";
-import User from "../models/auth-models/user.model.js";
 
 
 
@@ -14,7 +14,7 @@ const createLaptopProductController = asyncHandler(async(req , res , next)=>{
     // check if user is registered as a seller
     const userId = req.userId
 
-    const existingSeller = await Seller.findOne({ user : userId})
+    const existingSeller = await Seller.findById(userId)
     console.log(existingSeller)
 
     if(!existingSeller){
@@ -167,33 +167,53 @@ const getSellerLaptopsController = asyncHandler(async(req , res , next)=>{
 const getLaptopByIdController = asyncHandler(async(req , res , next)=>{
 
     const {laptopId} = req.params
-    const userId = req.userId
-    const user = await User.findOne({ user : userId})
 
-   
-if(!user){
-    const error = new APIError(404 , "user not found" , "USER_NOT_FOUND")
-    throw error
-}
+    if(!mongoose.isValidObjectId(laptopId)){
+        const error = new APIError(400 , "invalid laptop id" , "INVALID_ID")
+        throw error
+    }
+
     const laptop = await laptopModel.aggregate([
         {
             $match : {
-                _id : existingSeller._id, 
-                status : "active"
+                _id : new mongoose.Types.ObjectId(laptopId)
             }
-        } , 
+        } ,
 
         {
             $lookup : {
-                from : "laptopvariants", 
+                from : "laptopvariants",
                 localField : "_id",
-                foreignField : "product", 
+                foreignField : "product",
                 as : "variants"
             }
-        }
-    ]) 
+        },
 
-    if(!laptop){
+        {
+            $lookup : {
+                from : "sellers",
+                localField : "seller",
+                foreignField : "_id",
+                as : "sellerInfo"
+            }
+        },
+
+        {
+            $unwind : "$sellerInfo"
+        },
+
+        {
+            $addFields : {
+                sellerInfo : {
+                    _id : "$sellerInfo._id",
+                    storeName : "$sellerInfo.storeName",
+                    storeNumber : "$sellerInfo.storeNumber"
+                }
+            }
+        }
+    ])
+
+    if(!laptop.length){
         const error = new APIError(404 , "laptop not found" , "LAPTOP_NOT_FOUND")
         throw error
     }
@@ -414,6 +434,69 @@ const updatedLaptop = await laptopModel.findByIdAndUpdate(laptopId , changedProd
 })
 
 
+const createVariantController = asyncHandler(async(req , res , next)=>{
+
+    const userId = req.userId
+
+    // check if user is registered as a seller
+    const existingSeller = await Seller.findById(userId)
+
+    if(!existingSeller){
+        const error = new APIError(401 , "user is not registered as seller ", "UNAUTHORIZED_ACCESS")
+        throw error
+    }
+
+    const { laptopId } = req.params
+
+    // check if the laptop belongs to the seller
+
+    const laptop = await laptopModel.findOne({
+        _id : laptopId,
+        seller : existingSeller._id
+    })
+
+    if(!laptop){
+        const error = new APIError(404 , "laptop not found" , "LAPTOP_NOT_FOUND")
+        throw error
+    }
+
+    const { color , ram , storage , price , currency , compareAtPrice , stock , sku , isDefaultVariant } = req.body
+
+    const variantImages = req.files?.variantImage || []
+
+    if(!variantImages.length){
+        const error = new APIError(400 , "at least one variant image is required" , "IMAGES_REQUIRED")
+        throw error
+    }
+
+    const imageUrls = await Promise.all(
+        variantImages.map((image)=> uploadOnCloudinary(image.path))
+    )
+
+    const shouldBeDefault = isDefaultVariant === true || isDefaultVariant === "true"
+
+    if(shouldBeDefault){
+        await LaptopVariant.updateMany({ product : laptopId } , { isDefaultVariant : false })
+    }
+
+    const newVariant = await LaptopVariant.create({
+        product : laptopId,
+        color,
+        ram,
+        storage,
+        price : { price , currency },
+        compareAtPrice : compareAtPrice || null,
+        stock,
+        sku,
+        images : imageUrls,
+        isDefaultVariant : shouldBeDefault
+    })
+
+    res.status(201).json(new APIResponse(201 , { variant : newVariant } , "variant added successfully"))
+
+})
+
+
 const updateVariantController = asyncHandler(async(req , res , next)=>{
 
 
@@ -490,14 +573,91 @@ const updatedVariant = await LaptopVariant.findOneAndUpdate(
 
     res.status(200).json(new APIResponse(200 , {variants : updatedVariant} , "variant updated successfully"))
 })
+ 
+
+// escape user input before dropping it into a RegExp so a query like
+// "a(" can't blow up the regex engine or match unintended patterns
+function escapeRegex(text){
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+const searchLaptopsController = asyncHandler(async(req , res , next)=>{
+
+    const { q , brand , categoryId , page = 1 , limit = 20 } = req.query
+
+    if(categoryId && !mongoose.isValidObjectId(categoryId)){
+        const error = new APIError(400 , "invalid category id" , "INVALID_ID")
+        throw error
+    }
+
+    const pageNumber = Math.max(1 , Number(page) || 1)
+    const pageLimit = Math.min(50 , Math.max(1 , Number(limit) || 20))
+    const skip = (pageNumber - 1) * pageLimit
+
+    const match = { status : "active" }
+
+    // free-text search box: match against title, brand or description
+    if(q && q.trim()){
+        const searchRegex = new RegExp(escapeRegex(q.trim()) , "i")
+        match.$or = [
+            { title : searchRegex },
+            { brand : searchRegex },
+            { description : searchRegex }
+        ]
+    }
+
+    // exact brand filter (eg. brand chips/dropdown on the storefront)
+    if(brand && brand.trim()){
+        match.brand = new RegExp(`^${escapeRegex(brand.trim())}$` , "i")
+    }
+
+    if(categoryId){
+        match.category = new mongoose.Types.ObjectId(categoryId)
+    }
+
+    const [laptops, [{ total } = { total : 0 }]] = await Promise.all([
+        laptopModel.aggregate([
+            { $match : match },
+            { $sort : { createdAt : -1 } },
+            { $skip : skip },
+            { $limit : pageLimit },
+            {
+                $lookup : {
+                    from : "laptopvariants",
+                    localField : "_id",
+                    foreignField : "product",
+                    as : "variants"
+                }
+            }
+        ]),
+        laptopModel.aggregate([
+            { $match : match },
+            { $count : "total" }
+        ])
+    ])
+
+    res.status(200).json(new APIResponse(200 , {
+        laptops,
+        pagination : {
+            page : pageNumber,
+            limit : pageLimit,
+            total,
+            totalPages : Math.ceil(total / pageLimit)
+        }
+    } , "laptops fetched successfully"))
+
+})
 
 
 export {
-    createLaptopProductController, 
-    getSellerLaptopsController, 
+    createLaptopProductController,
+    getSellerLaptopsController,
     getAllLaptopsController,
     deleteLaptopController ,
     deleteLaptopVariantController,
-    updateLaptopController, 
-    updateVariantController
+    updateLaptopController,
+    updateVariantController,
+    getLaptopByIdController,
+    createVariantController,
+    searchLaptopsController
 }

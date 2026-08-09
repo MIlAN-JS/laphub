@@ -68,7 +68,6 @@ const addToCartController = asyncHandler(async(req , res , next)=>{
 
 })
 
-
 const getCartController = asyncHandler(async(req , res , next)=>{
 
     const userId = req.userId
@@ -77,12 +76,16 @@ const getCartController = asyncHandler(async(req , res , next)=>{
     const cart = await Cart.findOne({ user : userId }).populate("items.variantId")
 
     if(!cart){
-        throw new APIError(404 , "cart not found" , "CART_NOT_FOUND")
+        throw new APIError(404 , "Your cart is empty !!" , "CART_NOT_FOUND")
     }
 
     res.status(200).json(APIResponse(200 , {cart} , "cart fetched successfully"))
 
 })
+
+
+
+
 export {
     addToCartController, 
     getCartController
