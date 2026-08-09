@@ -5,13 +5,13 @@ import BuyerRegisterPage from "../features/auth/ui/pages/BuyerRegisterPage.jsx";
 import SellerRegisterPage from "../features/auth/ui/pages/SellerRegisterPage.jsx";
 import LoginPage from "../features/auth/ui/pages/LoginPage.jsx";
 import VerifyPage from "../features/auth/ui/pages/VerifyPage.jsx";
-import PublicLayout from "../layout/public.layout.jsx";
-import PrivateLayout from "../layout/private.layout.jsx";
+import PublicLayOut from "../layout/Public.layout.jsx"
+import PrivateLayout from "../layout/Private.layout.jsx";
 import CreateLaptopPage from "../features/laptop/ui/pages/CreateLaptopPage.jsx";
 import Dashboard from "../features/laptop/ui/pages/Dashboard.jsx";
 import LaptopDetails from "../features/laptop/ui/components/LaptopDetails.jsx";
 import HomePage from "../features/laptop/ui/pages/HomePage.jsx";
-import LaptopDetailPage from "../features/laptop/ui/pages/laptopDetailPage.jsx";
+import LaptopDetailPage from "../features/laptop/ui/pages/LaptopDetailPage.jsx";
 import SearchResultsPage from "../features/laptop/ui/pages/SearchResultsPage.jsx";
 import CartPage from "../features/cart/ui/pages/CartPage.jsx";
 import ChatsPage from "../features/chat/ui/pages/ChatsPage.jsx";
