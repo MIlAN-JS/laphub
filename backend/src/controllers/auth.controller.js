@@ -445,7 +445,7 @@ const setupUserAddressController = asyncHandler(async(req , res , next)=>{
   // return res.redirect(`${process.env.CLIENT_URL}/dashboard` || `${process.env.DEV_FRONTEND_URL}/dashboard`); // changed from login to your route
 
 
-  return res.redirect (process.env.DEV_FRONTEND_URL)
+  return res.redirect ( process.env.CLIENT_URL || process.env.DEV_FRONTEND_URL)
     
   } catch (error) {
 
