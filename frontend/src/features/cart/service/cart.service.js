@@ -14,8 +14,15 @@ const addToCartService = async(productId, variantId, quantity)=>{
     return response.data
 }
 
+const removeCartItemService = async(itemId)=>{
+
+    const response = await api.delete(`/cart/remove/${itemId}`);
+    return response.data
+}
+
 
 export {
     getCartService,
-    addToCartService
+    addToCartService,
+    removeCartItemService
 }

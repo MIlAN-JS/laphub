@@ -1,6 +1,6 @@
 
 
-import { getCartService, addToCartService } from "../service/cart.service";
+import { getCartService, addToCartService, removeCartItemService } from "../service/cart.service";
 import { useSelector } from 'react-redux'
 import { useDispatch } from 'react-redux'
 import { cartFailure, cartStart, cartSuccess, clearError } from "../context/cart.slice";
@@ -41,9 +41,18 @@ function useCart (){
         return response
     }
 
+    // Same reasoning as handleAddToCart: no cartStart/cartFailure dispatch,
+    // caller owns the per-item loading/error UI.
+    const handleRemoveCartItem = async(itemId)=>{
+        const response = await removeCartItemService(itemId)
+        dispatch(cartSuccess(response.data.cart))
+        return response
+    }
+
     return {
         handleGetCart,
-        handleAddToCart
+        handleAddToCart,
+        handleRemoveCartItem
     }
 
 }
