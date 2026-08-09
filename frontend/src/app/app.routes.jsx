@@ -16,6 +16,9 @@ import CartPage from "../features/cart/ui/pages/CartPage.jsx";
 import ChatsPage from "../features/chat/ui/pages/ChatsPage.jsx";
 import OrdersPage from "../features/order/ui/pages/OrdersPage.jsx";
 import ProfilePage from "../features/auth/ui/pages/ProfilePage.jsx";
+import NewDashboard from "../features/laptop/ui/pages/NewDashboard.jsx";
+import DashboardLayout from "../features/laptop/ui/layout/DashboardLayout.jsx";
+import ManageLaptopsPage from "../features/laptop/ui/pages/ManageLaptopsPage.jsx";
 
 
     export const router = createBrowserRouter([
@@ -40,8 +43,18 @@ import ProfilePage from "../features/auth/ui/pages/ProfilePage.jsx";
             }, 
             {
                 path : "dashboard",
-                element :<Dashboard/>
-            }, 
+                element :<DashboardLayout/>,
+                children : [
+                    {
+                        index : true,
+                        element : <NewDashboard/>
+                    },
+                    {
+                        path : "laptops",
+                        element : <ManageLaptopsPage/>
+                    }
+                ]
+            },
             {
                 path : "laptop/view/:productId",
                 element :<LaptopDetails/>

@@ -1,5 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useSelector } from "react-redux";
 import  useLaptop from "../../hook/useLaptop.js";
+import useCategory from "../../../categories/hook/useCategory.js";
 import {
   FiUpload,
   FiX,
@@ -21,19 +23,21 @@ import {
   FiEdit2,
   FiCheckCircle,
   FiArrowLeft,
+  FiLayers,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 const MAX_VARIANT_IMAGES = 5;
 
 const STATUS_OPTIONS = ["active", "inactive", "draft"];
+const CURRENCY_OPTIONS = ["NPR", "USD", "EUR"];
 
 function makeEmptyVariant(isDefaultVariant = false) {
   return {
     color: "",
     ram: "",
     storage: "",
-    price: "",
+    price: { price: "", currency: "NPR" },
     stock: "",
     sku: "",
     status: "active",
@@ -49,7 +53,16 @@ export default function CreatelaptopComponent() {
     battery: "",
     brand: "",
     display: "",
+    categoryId: "",
   });
+
+  const { handleGetAllCategories } = useCategory();
+  const { categoryData } = useSelector((state) => state.category);
+
+  useEffect(() => {
+    handleGetAllCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(null);
@@ -110,6 +123,16 @@ export default function CreatelaptopComponent() {
     setVariants((prev) =>
       prev.map((variant, i) =>
         i === index ? { ...variant, [field]: value } : variant
+      )
+    );
+  };
+
+  const handleVariantPriceChange = (index, field, value) => {
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i === index
+          ? { ...variant, price: { ...variant.price, [field]: value } }
+          : variant
       )
     );
   };
@@ -183,6 +206,7 @@ export default function CreatelaptopComponent() {
       battery: formData.battery,
       brand: formData.brand,
       display: formData.display,
+      categoryId: formData.categoryId,
       thumbnail,
       variants,
       variantImage,
@@ -274,6 +298,36 @@ export default function CreatelaptopComponent() {
                     required
                     className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#E2E8F0] bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
                   />
+                </div>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label
+                  htmlFor="categoryId"
+                  className="block text-sm font-medium text-[#334155] mb-1.5"
+                >
+                  Category
+                </label>
+                <div className="relative">
+                  <FiLayers className="absolute left-3 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[#64748B] pointer-events-none" />
+                  <select
+                    id="categoryId"
+                    name="categoryId"
+                    value={formData.categoryId}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#E2E8F0] bg-white text-[#0F172A] text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
+                  >
+                    <option value="" disabled>
+                      Select a category
+                    </option>
+                    {(Array.isArray(categoryData) ? categoryData : []).map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -505,19 +559,34 @@ export default function CreatelaptopComponent() {
                       <label className="block text-xs font-medium text-[#334155] mb-1">
                         Price
                       </label>
-                      <div className="relative">
-                        <FiDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="89999"
-                          value={variant.price}
+                      <div className="flex gap-2">
+                        <select
+                          value={variant.price.currency}
                           onChange={(e) =>
-                            handleVariantFieldChange(index, "price", e.target.value)
+                            handleVariantPriceChange(index, "currency", e.target.value)
                           }
-                          required
-                          className="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
-                        />
+                          className="w-24 px-2 py-2 rounded-lg border border-[#E2E8F0] bg-white text-[#0F172A] text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
+                        >
+                          {CURRENCY_OPTIONS.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="relative flex-1">
+                          <FiDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="89999"
+                            value={variant.price.price}
+                            onChange={(e) =>
+                              handleVariantPriceChange(index, "price", e.target.value)
+                            }
+                            required
+                            className="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E2E8F0] bg-white text-[#0F172A] placeholder:text-[#64748B]/60 text-sm outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -706,7 +775,17 @@ export default function CreatelaptopComponent() {
                 </div>
 
                 {/* specs */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="rounded-lg border border-[#E2E8F0] px-3.5 py-2.5">
+                    <p className="text-xs text-[#64748B] flex items-center gap-1.5 mb-0.5">
+                      <FiLayers className="w-3.5 h-3.5" />
+                      Category
+                    </p>
+                    <p className="text-sm font-medium text-[#0F172A]">
+                      {categoryData.find((category) => category._id === formData.categoryId)
+                        ?.name || "—"}
+                    </p>
+                  </div>
                   <div className="rounded-lg border border-[#E2E8F0] px-3.5 py-2.5">
                     <p className="text-xs text-[#64748B] flex items-center gap-1.5 mb-0.5">
                       <FiMonitor className="w-3.5 h-3.5" />
@@ -773,8 +852,10 @@ export default function CreatelaptopComponent() {
                           <div>
                             <p className="text-xs text-[#64748B]">Price</p>
                             <p className="font-medium text-[#0F172A]">
-                              {variant.price
-                                ? `₹${Number(variant.price).toLocaleString("en-IN")}`
+                              {variant.price.price
+                                ? `${variant.price.currency} ${Number(
+                                    variant.price.price
+                                  ).toLocaleString("en-IN")}`
                                 : "—"}
                             </p>
                           </div>

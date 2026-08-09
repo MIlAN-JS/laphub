@@ -2,16 +2,16 @@ import api from "../../../app/app.api.js";
 
 
 
-const formData = new FormData();
+ const createLaptopProductService = async({title, description, battery, brand, display, categoryId, thumbnail, variants, variantImage})=>{
 
-
- const createLaptopProductService = async({title, description, battery, brand, display, thumbnail, variants, variantImage})=>{
+    const formData = new FormData();
 
     formData.append("title", title);
     formData.append("description", description);
     formData.append("battery", battery);
     formData.append("brand", brand);
     formData.append("display", display);
+    formData.append("categoryId", categoryId);
     formData.append("thumbnail", thumbnail);
     formData.append("variants", JSON.stringify(variants));
     const flatImages = variantImage.flat();

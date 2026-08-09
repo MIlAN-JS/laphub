@@ -41,9 +41,10 @@ function formatDate(dateString) {
   });
 }
 
-function formatPrice(value) {
-  if (value === null || value === undefined || value === "") return "—";
-  return `₹${Number(value).toLocaleString("en-IN")}`;
+function formatPrice(price) {
+  if (!price || price.price === null || price.price === undefined || price.price === "")
+    return "—";
+  return `${price.currency} ${Number(price.price).toLocaleString("en-IN")}`;
 }
 
 export default function LaptopDetails({ onBack }) {

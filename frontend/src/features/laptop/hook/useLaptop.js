@@ -7,10 +7,10 @@ const useLaptop = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-    const handleCreateLaptop = async ({title, description, battery, brand, display, thumbnail, variants, variantImage}) => {
+    const handleCreateLaptop = async ({title, description, battery, brand, display, categoryId, thumbnail, variants, variantImage}) => {
         try {
             dispatch(laptopStart())
-            const response = await createLaptopProductService({title, description, battery, brand, display, thumbnail, variants, variantImage})
+            const response = await createLaptopProductService({title, description, battery, brand, display, categoryId, thumbnail, variants, variantImage})
             console.log(response)
             dispatch(laptopSuccess(response))
             dispatch(clearError())
