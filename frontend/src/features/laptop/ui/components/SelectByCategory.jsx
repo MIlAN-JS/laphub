@@ -1,30 +1,58 @@
-import React from "react"
+import React, { useEffect } from "react"
+import { useSelector } from "react-redux"
+import { useNavigate } from "react-router-dom"
 import { Gamepad2, Briefcase, Laptop, Palette, GraduationCap, Cpu, Tablet, Home } from "lucide-react"
 import CategoryCard from "../../../../components/ui/CategoryCard"
+import useCategory from "../../../categories/hook/useCategory.js"
 
-const CATEGORIES = [
-  { name: "Gaming", icon: Gamepad2, image: "https://picsum.photos/seed/laphub-gaming/600/400" },
-  { name: "Business", icon: Briefcase, image: "https://picsum.photos/seed/laphub-business/600/400" },
-  { name: "Ultrabook", icon: Laptop, image: "https://picsum.photos/seed/laphub-ultrabook/600/400" },
-  { name: "Creator", icon: Palette, image: "https://picsum.photos/seed/laphub-creator/600/400" },
-  { name: "Student", icon: GraduationCap, image: "https://picsum.photos/seed/laphub-student/600/400" },
-  { name: "Workstation", icon: Cpu, image: "https://picsum.photos/seed/laphub-workstation/600/400" },
-  { name: "2-in-1", icon: Tablet, image: "https://picsum.photos/seed/laphub-2in1/600/400" },
-  { name: "Home Use", icon: Home, image: "https://picsum.photos/seed/laphub-home/600/400" },
-]
+// Cosmetic only — purely picks a fitting icon for known category names.
+// Anything that doesn't match (eg. a category a seller adds later) just
+// falls back to the generic Laptop icon in CategoryCard.
+const CATEGORY_ICONS = {
+  gaming: Gamepad2,
+  business: Briefcase,
+  ultrabook: Laptop,
+  creator: Palette,
+  student: GraduationCap,
+  workstation: Cpu,
+  "2-in-1": Tablet,
+  "home use": Home,
+}
+
+function getCategoryIcon(name) {
+  return CATEGORY_ICONS[name?.trim().toLowerCase()]
+}
 
 function SelectByCategory() {
+  const navigate = useNavigate()
+  const { handleGetAllCategories } = useCategory()
+  const { categoryData } = useSelector((state) => state.category)
+
+  useEffect(() => {
+    handleGetAllCategories()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const categories = Array.isArray(categoryData) ? categoryData : []
+
+  if (categories.length === 0) return null
+
   return (
     <section className="px-4 py-8 sm:px-6 sm:py-10">
       <h2 className="text-2xl font-bold text-ink sm:text-3xl lg:text-4xl">Shop by Category</h2>
+      <hr className="mt-4 border-neutral sm:mt-6" />
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:mt-8 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
-        {CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <CategoryCard
-            key={category.name}
+            key={category._id}
             name={category.name}
-            icon={category.icon}
-            image={category.image}
+            icon={getCategoryIcon(category.name)}
+            onClick={() =>
+              navigate(
+                `/search?categoryId=${category._id}&categoryName=${encodeURIComponent(category.name)}`
+              )
+            }
           />
         ))}
       </div>

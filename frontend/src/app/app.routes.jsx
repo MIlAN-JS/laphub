@@ -12,6 +12,7 @@ import Dashboard from "../features/laptop/ui/pages/Dashboard.jsx";
 import LaptopDetails from "../features/laptop/ui/components/LaptopDetails.jsx";
 import HomePage from "../features/laptop/ui/pages/HomePage.jsx";
 import LaptopDetailPage from "../features/laptop/ui/pages/laptopDetailPage.jsx";
+import SearchResultsPage from "../features/laptop/ui/pages/SearchResultsPage.jsx";
 import CartPage from "../features/cart/ui/pages/CartPage.jsx";
 import ChatsPage from "../features/chat/ui/pages/ChatsPage.jsx";
 import OrdersPage from "../features/order/ui/pages/OrdersPage.jsx";
@@ -36,6 +37,10 @@ import ManageLaptopsPage from "../features/laptop/ui/pages/ManageLaptopsPage.jsx
             {
                 path : "laptop/detail/:productId",
                 element : <LaptopDetailPage/>
+            },
+            {
+                path : "search",
+                element : <SearchResultsPage/>
             },
             {
                 path : "create-laptop",

@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react"
 import { FiSearch } from "react-icons/fi"
+import { useNavigate } from "react-router-dom"
 import useDebounce from "../../hooks/useDebounce"
 import { searchProducts } from "./search.service.js"
 
 function SearchBar() {
+  const navigate = useNavigate()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -62,13 +64,26 @@ function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
+  const goToResults = () => {
+    const trimmed = query.trim()
+    if (!trimmed) return
+    setIsOpen(false)
+    navigate(`/search?q=${encodeURIComponent(trimmed)}`)
+  }
+
   const handleKeyDown = (event) => {
     if (event.key === "Enter") {
       event.preventDefault()
-      runSearch(query)
+      goToResults()
     } else if (event.key === "Escape") {
       setIsOpen(false)
     }
+  }
+
+  const handleResultClick = (productId) => {
+    setIsOpen(false)
+    setQuery("")
+    navigate(`/laptop/detail/${productId}`)
   }
 
   const showDropdown = isOpen && query.trim().length > 0
@@ -88,7 +103,7 @@ function SearchBar() {
         />
         <button
           type="button"
-          onClick={() => runSearch(query)}
+          onClick={goToResults}
           aria-label="Search"
           className="px-4 py-2 text-ink hover:text-olive transition-colors"
         >
@@ -111,9 +126,11 @@ function SearchBar() {
           {!isLoading &&
             !error &&
             results.map((product) => (
-              <div
+              <button
                 key={product.id}
-                className="flex items-center gap-3 px-4 py-2 hover:bg-cream cursor-pointer"
+                type="button"
+                onClick={() => handleResultClick(product.id)}
+                className="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-cream cursor-pointer"
               >
                 <img
                   src={product.thumbnail}
@@ -121,8 +138,18 @@ function SearchBar() {
                   className="h-10 w-10 object-cover rounded"
                 />
                 <span className="text-sm text-ink truncate">{product.title}</span>
-              </div>
+              </button>
             ))}
+
+          {!isLoading && !error && (
+            <button
+              type="button"
+              onClick={goToResults}
+              className="w-full border-t border-neutral px-4 py-2.5 text-left text-sm font-semibold text-olive hover:bg-cream"
+            >
+              See all results for &quot;{query.trim()}&quot;
+            </button>
+          )}
         </div>
       )}
     </div>

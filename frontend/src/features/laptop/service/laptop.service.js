@@ -73,10 +73,24 @@ import api from "../../../app/app.api.js";
     return response.data
   }
 
+  const searchLaptopsService = async({q, brand, categoryId, page, limit})=>{
+
+    const params = new URLSearchParams();
+    if(q) params.set("q", q);
+    if(brand) params.set("brand", brand);
+    if(categoryId) params.set("categoryId", categoryId);
+    if(page) params.set("page", page);
+    if(limit) params.set("limit", limit);
+
+    const response = await api.get(`/laptop/search?${params.toString()}`);
+    return response.data
+  }
+
  export {
    createLaptopProductService,
    getSellerLaptops,
    getLaptopDetail,
    getAllLaptopsService,
-   addVariantService
+   addVariantService,
+   searchLaptopsService
  }

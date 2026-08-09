@@ -16,6 +16,7 @@ import {
   FiXCircle,
 } from "react-icons/fi";
 import useLaptop from "../../hook/useLaptop.js";
+import useCart from "../../../cart/hook/useCart.js";
 
 const VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm"];
 
@@ -34,6 +35,7 @@ export default function LaptopDetailBuyer() {
   const navigate = useNavigate();
 
   const { handleGetLaptopDetail } = useLaptop();
+  const { handleAddToCart } = useCart();
   const { laptopData, error, isLoading } = useSelector((state) => state.laptop);
   const { user } = useSelector((state) => state.auth);
 
@@ -47,6 +49,7 @@ export default function LaptopDetailBuyer() {
   const [selectedVariantIdOverride, setSelectedVariantIdOverride] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [addToCartState, setAddToCartState] = useState({ status: "idle", message: "" });
 
   useEffect(() => {
     if (productId) handleGetLaptopDetail(productId);
@@ -91,6 +94,7 @@ export default function LaptopDetailBuyer() {
     setLastVariantId(selectedVariant?._id ?? null);
     setActiveImage(0);
     setQuantity(1);
+    setAddToCartState({ status: "idle", message: "" });
   }
 
   const handleSelectColor = (color) => {
@@ -118,6 +122,19 @@ export default function LaptopDetailBuyer() {
   const decrementQuantity = () => setQuantity((q) => Math.max(1, q - 1));
   const incrementQuantity = () =>
     setQuantity((q) => Math.min(selectedVariant?.stock ?? 1, q + 1));
+
+  const handleAddToCartClick = async () => {
+    if (!laptop?._id || !selectedVariant?._id) return;
+    setAddToCartState({ status: "loading", message: "" });
+    try {
+      await handleAddToCart(laptop._id, selectedVariant._id, quantity);
+      setAddToCartState({ status: "added", message: "" });
+    } catch (err) {
+      const message =
+        err.response?.data?.message || err.message || "Could not add to cart";
+      setAddToCartState({ status: "error", message });
+    }
+  };
 
   if (isOwner) return null;
 
@@ -339,13 +356,25 @@ export default function LaptopDetailBuyer() {
                 </button>
                 <button
                   type="button"
-                  disabled={!inStock}
+                  disabled={!inStock || addToCartState.status === "loading"}
+                  onClick={handleAddToCartClick}
                   className="flex-1 flex items-center justify-center gap-2 border border-[#2563EB] text-[#2563EB] hover:bg-[#2563EB]/5 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold px-5 py-3 rounded-lg transition"
                 >
                   <FiShoppingCart className="w-4 h-4" />
-                  Add to Cart
+                  {addToCartState.status === "loading"
+                    ? "Adding..."
+                    : addToCartState.status === "added"
+                    ? "Added to cart"
+                    : "Add to Cart"}
                 </button>
               </div>
+
+              {addToCartState.status === "error" && (
+                <p className="mt-2 flex items-center gap-1.5 text-sm text-[#F97316]">
+                  <FiAlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  {addToCartState.message}
+                </p>
+              )}
 
               <div className="mt-8 pt-6 border-t border-[#E2E8F0] space-y-4">
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#334155]">

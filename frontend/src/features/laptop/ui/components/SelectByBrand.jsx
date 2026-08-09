@@ -1,4 +1,5 @@
 import React from "react"
+import { useNavigate } from "react-router-dom"
 import BrandCard from "../../../../components/ui/BrandCard"
 import apple from "../../../../assets/brandAssets/apple.png"
 import dell from "../../../../assets/brandAssets/dell.png"
@@ -21,6 +22,8 @@ const BRANDS = [
 ]
 
 function SelectByBrand() {
+  const navigate = useNavigate()
+
   return (
     <section className="px-4 py-8 sm:px-6 sm:py-10">
       <h2 className="text-2xl font-bold text-ink sm:text-3xl lg:text-4xl">Select By Brand</h2>
@@ -28,7 +31,12 @@ function SelectByBrand() {
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:mt-8 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
         {BRANDS.map((brand) => (
-          <BrandCard key={brand.name} name={brand.name} logo={brand.logo} />
+          <BrandCard
+            key={brand.name}
+            name={brand.name}
+            logo={brand.logo}
+            onClick={() => navigate(`/search?brand=${encodeURIComponent(brand.name)}`)}
+          />
         ))}
       </div>
     </section>

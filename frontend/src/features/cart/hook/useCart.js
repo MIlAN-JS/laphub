@@ -1,6 +1,6 @@
 
 
-import { getCartService } from "../service/cart.service";
+import { getCartService, addToCartService } from "../service/cart.service";
 import { useSelector } from 'react-redux'
 import { useDispatch } from 'react-redux'
 import { cartFailure, cartStart, cartSuccess, clearError } from "../context/cart.slice";
@@ -31,8 +31,19 @@ function useCart (){
      
     }
 
+    // Doesn't dispatch cartStart/cartFailure so a failed add doesn't wipe
+    // cartData out from under the cart icon dropdown or cart page if either
+    // is open elsewhere — the caller (the button) owns its own loading/error
+    // state and this just syncs global cart state on success.
+    const handleAddToCart = async(productId, variantId, quantity)=>{
+        const response = await addToCartService(productId, variantId, quantity)
+        dispatch(cartSuccess(response.data.cart))
+        return response
+    }
+
     return {
-        handleGetCart
+        handleGetCart,
+        handleAddToCart
     }
 
 }

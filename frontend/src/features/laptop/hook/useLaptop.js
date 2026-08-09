@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux"
 import { laptopStart, laptopFailure, laptopSuccess, clearError, laptopSuccessSeller } from "../context/laptop.slice.js"
-import { createLaptopProductService , getSellerLaptops , getLaptopDetail, getAllLaptopsService, addVariantService} from "../service/laptop.service.js"
+import { createLaptopProductService , getSellerLaptops , getLaptopDetail, getAllLaptopsService, addVariantService, searchLaptopsService} from "../service/laptop.service.js"
 import { useNavigate } from "react-router-dom"
 const useLaptop = () => {
 
@@ -93,12 +93,34 @@ const useLaptop = () => {
         return await addVariantService(laptopId, variantData);
     }
 
+    // Returns the pagination info from the response so the results page can
+    // drive prev/next without the laptop slice needing to know about it.
+    const handleSearchLaptops = async({q, brand, categoryId, page, limit})=>{
+        try {
+
+            dispatch(laptopStart())
+            const response = await searchLaptopsService({q, brand, categoryId, page, limit});
+            dispatch(laptopSuccess(response.data.laptops))
+            dispatch(clearError())
+            return response.data.pagination
+
+        } catch (error) {
+            const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong";
+            dispatch(laptopFailure(message))
+            dispatch(clearError())
+        }
+    }
+
     return {
         handleCreateLaptop,
         handleGetSellerLaptops,
         handleGetLaptopDetail,
         handleGetLaptops,
-        handleAddVariant
+        handleAddVariant,
+        handleSearchLaptops
     }
 
 }

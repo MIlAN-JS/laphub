@@ -1,14 +1,18 @@
 import React from "react"
+import { Laptop } from "lucide-react"
 
-function CategoryCard({ name, image, icon: Icon }) {
+function CategoryCard({ name, icon: Icon = Laptop, onClick }) {
   return (
-    <div className="overflow-hidden rounded-md border border-ink">
-      <img src={image} alt={name} className="h-56 w-full object-cover" />
-      <div className="flex items-center justify-between px-4 py-4">
-        <span className="text-lg font-bold text-ink">{name}</span>
-        <Icon size={20} className="text-neutral" />
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full flex-col items-center justify-center gap-3 rounded-md border border-ink px-4 py-6 transition hover:shadow-md sm:gap-4 sm:px-6 sm:py-8"
+    >
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-olive/10 text-olive sm:h-14 sm:w-14">
+        <Icon size={22} />
+      </span>
+      <span className="text-base font-bold text-ink sm:text-lg">{name}</span>
+    </button>
   )
 }
 
